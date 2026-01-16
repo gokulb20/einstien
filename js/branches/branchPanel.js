@@ -46,8 +46,6 @@ var branchPanel = {
   expandAllBtn: null,
   toggleSidebarBtn: null,
   expandSidebarBtn: null,
-  headerToggleSidebarBtn: null,  // Header toggle button
-  headerNewBranchBtn: null,       // Header new branch button
   urlInput: null,
   isSidebarCollapsed: false,
   collapsedBranches: new Set(),
@@ -68,8 +66,6 @@ var branchPanel = {
     this.expandAllBtn = document.getElementById('expand-all-btn')
     this.toggleSidebarBtn = document.getElementById('toggle-sidebar-btn')
     this.expandSidebarBtn = document.getElementById('sidebar-expand-btn')
-    this.headerToggleSidebarBtn = document.getElementById('header-toggle-sidebar-btn')
-    this.headerNewBranchBtn = document.getElementById('header-new-branch-btn')
     this.urlInput = document.getElementById('sidebar-url-input')
 
     if (!this.container || !this.treeContainer) {
@@ -205,29 +201,6 @@ var branchPanel = {
       })
     }
 
-    // Header: Toggle Sidebar button (Arc-style)
-    if (this.headerToggleSidebarBtn) {
-      console.log('[BranchPanel] Attaching header toggle sidebar button handler')
-      this.headerToggleSidebarBtn.addEventListener('click', function () {
-        console.log('[BranchPanel] Header toggle sidebar button clicked')
-        self.toggleSidebar()
-      })
-    }
-
-    // Header: New Branch button (Arc-style)
-    if (this.headerNewBranchBtn) {
-      console.log('[BranchPanel] Attaching header new branch button handler')
-      this.headerNewBranchBtn.addEventListener('click', function () {
-        console.log('[BranchPanel] Header new branch button clicked')
-        try {
-          browserUI.addTab()
-          console.log('[BranchPanel] browserUI.addTab() succeeded')
-        } catch (e) {
-          console.error('[BranchPanel] browserUI.addTab() failed:', e)
-        }
-      })
-    }
-
     // URL Input: Navigate on Enter key
     if (this.urlInput) {
       console.log('[BranchPanel] Attaching URL input handler')
@@ -305,11 +278,6 @@ var branchPanel = {
       this.toggleSidebarBtn.textContent = this.isSidebarCollapsed ? '▶' : '◀'
     }
 
-    // Update header toggle button icon
-    if (this.headerToggleSidebarBtn) {
-      this.headerToggleSidebarBtn.textContent = this.isSidebarCollapsed ? '▶' : '☰'
-    }
-
     // Show/hide floating expand button
     if (this.expandSidebarBtn) {
       this.expandSidebarBtn.hidden = !this.isSidebarCollapsed
@@ -338,11 +306,6 @@ var branchPanel = {
 
       if (this.toggleSidebarBtn) {
         this.toggleSidebarBtn.textContent = '▶'
-      }
-
-      // Update header toggle button icon
-      if (this.headerToggleSidebarBtn) {
-        this.headerToggleSidebarBtn.textContent = '▶'
       }
 
       if (this.expandSidebarBtn) {
