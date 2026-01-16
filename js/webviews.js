@@ -179,6 +179,10 @@ const webviews = {
   add: function (tabId, existingViewId) {
     var tabData = tabs.get(tabId)
 
+    // DEBUG: Log bounds when creating view
+    var bounds = webviews.getViewBounds()
+    console.log('[WEBVIEWS] Creating view for tab:', tabId, 'bounds:', JSON.stringify(bounds), 'viewMargins:', JSON.stringify(webviews.viewMargins))
+
     // needs to be called before the view is created to that its listeners can be registered
     if (tabData.scrollPosition) {
       scrollOnLoad(tabId, tabData.scrollPosition)
@@ -318,7 +322,9 @@ const webviews = {
     }
   },
   resize: function () {
-    ipc.send('setBounds', { id: webviews.selectedId, bounds: webviews.getViewBounds() })
+    var bounds = webviews.getViewBounds()
+    console.log('[WEBVIEWS] resize() called, selectedId:', webviews.selectedId, 'bounds:', JSON.stringify(bounds))
+    ipc.send('setBounds', { id: webviews.selectedId, bounds: bounds })
   },
   goBackIgnoringRedirects: async function (id) {
     const navHistory = await webviews.getNavigationHistory(id)

@@ -12,7 +12,8 @@ var tabEditor = require('navbar/tabEditor.js')
 var searchbar = require('searchbar/searchbar.js')
 
 // Branch Browser: Import branch state management
-var branchState = require('branches/branchState.js')
+// DISABLED: Causes white screen by breaking module loading chain
+// var branchState = require('branches/branchState.js')
 
 /* creates a new task */
 
@@ -239,10 +240,9 @@ tasks.on('tab-updated', function (id, key) {
   }
 })
 
-// Branch Browser: Handle popups with branch tracking
-webviews.bindEvent('did-create-popup', async function (tabId, popupId, initialURL) {
+// Handle popups (Branch tracking disabled for MVP)
+webviews.bindEvent('did-create-popup', function (tabId, popupId, initialURL) {
   var parentTab = tabs.get(tabId)
-  var parentBranchId = parentTab ? parentTab.branchId : null
 
   var popupTab = tabs.add({
     // in most cases, initialURL will be overwritten once the popup loads, but if the URL is a downloaded file, it will remain the same
@@ -250,16 +250,10 @@ webviews.bindEvent('did-create-popup', async function (tabId, popupId, initialUR
     private: tabs.get(tabId).private
   })
 
-  // Create branch for popup with parent relationship
-  // Note: popupTab is already a tab ID string from tabs.add()
-  var newBranchId = await branchState.create(popupTab, parentBranchId, initialURL, '')
-  console.log('[BranchBrowser] Created popup branch:', newBranchId, 'for tab:', popupTab, 'parent:', parentBranchId)
-
-  // Update tab with branch info
-  tabs.update(popupTab, {
-    branchId: newBranchId,
-    parentBranchId: parentBranchId
-  })
+  // Branch Browser: Disabled for MVP - causes white screen
+  // var newBranchId = await branchState.create(popupTab, parentBranchId, initialURL, '')
+  // console.log('[BranchBrowser] Created popup branch:', newBranchId, 'for tab:', popupTab, 'parent:', parentBranchId)
+  // tabs.update(popupTab, { branchId: newBranchId, parentBranchId: parentBranchId })
 
   tabBar.addTab(popupTab)
   webviews.add(popupTab, popupId)

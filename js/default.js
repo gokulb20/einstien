@@ -155,21 +155,26 @@ require('contextMenu.js').initialize()
 require('menuRenderer.js').initialize()
 require('defaultKeybindings.js').initialize()
 require('pdfViewer.js').initialize()
-require('autofillSetup.js').initialize()
-require('passwordManager/passwordManager.js').initialize()
-require('passwordManager/passwordCapture.js').initialize()
-require('passwordManager/passwordViewer.js').initialize()
+// Branch Browser: Password manager disabled for MVP (causes initialization errors)
+// require('autofillSetup.js').initialize()
+// require('passwordManager/passwordManager.js').initialize()
+// require('passwordManager/passwordCapture.js').initialize()
+// require('passwordManager/passwordViewer.js').initialize()
 require('util/theme.js').initialize()
 require('userscripts.js').initialize()
 require('statistics.js').initialize()
 require('taskOverlay/taskOverlay.js').initialize()
 require('sessionRestore.js').initialize()
-require('bookmarkConverter.js').initialize()
-require('newTabPage.js').initialize()
-require('macHandoff.js').initialize()
 
-// Branch Browser: Initialize branches after database is ready
-// NOTE: Session restore runs UNCONDITIONALLY below - branches catch up via events
+// Branch Browser: Disable non-essential modules for MVP
+// require('bookmarkConverter.js').initialize()  // Disabled - causes error during webpack chunk loading
+// require('newTabPage.js').initialize()  // Disabled - not needed for MVP
+// require('macHandoff.js').initialize()  // Disabled - not needed for MVP
+
+// Branch Browser: TEMPORARILY DISABLED to debug white screen
+// The branch modules cause errors during webpack chunk loading
+// TODO: Fix branch modules and re-enable
+/*
 var database = require('util/database.js')
 database.dbReady.then(async function () {
   console.log('[BranchBrowser] Database ready, initializing branches...')
@@ -185,13 +190,13 @@ database.dbReady.then(async function () {
   }
 }).catch(function (e) {
   console.error('[BranchBrowser] Database ready failed:', e)
-  // Still try to initialize the panel even if DB/branch events fail
   try {
     require('branches/branchPanel.js').initialize()
   } catch (e2) {
     console.error('[BranchBrowser] branchPanel fallback init failed:', e2)
   }
 })
+*/
 
 // default searchbar plugins
 
@@ -208,6 +213,15 @@ require('searchbar/historyViewer.js').initialize()
 // require('searchbar/developmentModeNotification.js').initialize() // Disabled for Branch Browser
 require('searchbar/shortcutButtons.js').initialize()
 require('searchbar/calculatorPlugin.js').initialize()
+
+// CRITICAL: Set sidebar margin BEFORE creating webviews
+// This ensures getViewBounds() uses x=260 instead of x=0
+var webviews = require('webviews.js')
+var SIDEBAR_WIDTH = 260
+console.log('[BranchBrowser] viewMargins BEFORE:', JSON.stringify(webviews.viewMargins))
+webviews.adjustMargin([0, 0, 0, SIDEBAR_WIDTH])
+console.log('[BranchBrowser] viewMargins AFTER:', JSON.stringify(webviews.viewMargins))
+console.log('[BranchBrowser] getViewBounds():', JSON.stringify(webviews.getViewBounds()))
 
 // CRITICAL: Session restore runs UNCONDITIONALLY
 // This ensures the browser always works, even if branches fail to initialize

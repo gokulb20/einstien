@@ -55,11 +55,13 @@ const sessionRestore = {
     }
   },
   restoreFromFile: function () {
+    console.log('[SessionRestore] restoreFromFile() starting, path:', sessionRestore.savePath)
     var savedStringData
     try {
       savedStringData = fs.readFileSync(sessionRestore.savePath, 'utf-8')
+      console.log('[SessionRestore] Read file, length:', savedStringData ? savedStringData.length : 0)
     } catch (e) {
-      console.warn('failed to read session restore data', e)
+      console.warn('[SessionRestore] failed to read session restore data', e)
     }
 
     var startupConfigOption = settings.get('startupTabOption') || 2
@@ -82,11 +84,13 @@ const sessionRestore = {
     try {
       // first run, show the tour
       if (!savedStringData) {
+        console.log('[SessionRestore] No saved data, creating tour tab')
         tasks.setSelected(tasks.add()) // create a new task
 
         var newTab = tasks.getSelected().tabs.add({
             url: 'https://minbrowser.github.io/min/tour'
         })
+        console.log('[SessionRestore] Calling browserUI.addTab for tour, tabId:', newTab)
         browserUI.addTab(newTab, {
          enterEditMode: false
         })
@@ -219,9 +223,12 @@ const sessionRestore = {
     }
   },
   restore: function () {
+    console.log('[SessionRestore] restore() called, globalArgs:', JSON.stringify(window.globalArgs))
     if (Object.hasOwn(window.globalArgs, 'initial-window')) {
+      console.log('[SessionRestore] Calling restoreFromFile()')
       sessionRestore.restoreFromFile()
     } else {
+      console.log('[SessionRestore] Calling syncWithWindow()')
       sessionRestore.syncWithWindow()
     }
     if (settings.get('newWindowOption') === 2 && !Object.hasOwn(window.globalArgs, 'launch-window') && !Object.hasOwn(window.globalArgs, 'initial-task')) {

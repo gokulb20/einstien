@@ -505,7 +505,13 @@ app.once('ready', function() {
 })
 
 ipc.on('places-connect', function (e) {
-  placesWindow.webContents.postMessage('places-connect', null, e.ports)
+  try {
+    if (placesWindow && placesWindow.webContents && !placesWindow.webContents.isDestroyed()) {
+      placesWindow.webContents.postMessage('places-connect', null, e.ports)
+    }
+  } catch (err) {
+    console.warn('[places-connect] Failed to post message:', err.message)
+  }
 })
 
 function getWindowWebContents (win) {
@@ -534,7 +540,11 @@ app.on('ready', function() {
     // translateWindow.webContents.openDevTools({mode: 'detach'})
 
     translateWindow.webContents.once('did-finish-load', function() {
-      translateWindow.webContents.postMessage('page-translation-session-create', null, e.ports)
+      try {
+        translateWindow.webContents.postMessage('page-translation-session-create', null, e.ports)
+      } catch (err) {
+        console.warn('[translate] Failed to post message:', err.message)
+      }
     })
   })
 })

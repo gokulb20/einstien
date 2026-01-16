@@ -65,6 +65,11 @@ const keyboardNavigationHelper = {
     }
   },
   addToGroup: function (group, container) {
+    // Guard against null container (element not found in DOM)
+    if (!container) {
+      console.warn('[keyboardNavigationHelper] addToGroup called with null container for group:', group)
+      return
+    }
     if (!keyboardNavigationHelper.groups[group]) {
       keyboardNavigationHelper.groups[group] = []
     }
