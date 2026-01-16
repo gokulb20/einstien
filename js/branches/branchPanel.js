@@ -119,16 +119,6 @@ var branchPanel = {
     // Listen for tab events to update the tree
     this.setupEventListeners()
 
-    // Apply sidebar margin to webviews (always visible now)
-    // Delay to ensure webviews is ready
-    setTimeout(function () {
-      try {
-        webviews.adjustMargin([0, 0, 0, SIDEBAR_WIDTH])
-      } catch (e) {
-        console.error('[BranchPanel] Failed to adjust margin:', e)
-      }
-    }, 100)
-
     console.log('[BranchPanel] Initialized')
   },
 
