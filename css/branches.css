@@ -1,0 +1,656 @@
+/* Branch Browser - Apple/Arc/Horse-style Dark Sidebar */
+/* Design: Invisible until needed, alive when touched */
+
+/* =========================================
+   HIDE STARTUP SEARCHBAR
+   ========================================= */
+
+body.is-ntp #searchbar {
+  display: none !important;
+}
+
+#searchbar {
+  left: 260px !important;
+  width: calc(100% - 260px) !important;
+}
+
+/* =========================================
+   SIDEBAR CONTAINER - Subtle gradient depth
+   ========================================= */
+
+#branch-sidebar {
+  position: fixed;
+  top: calc(36px + var(--control-space-top));
+  left: 0;
+  bottom: 0;
+  width: 260px;
+  background: linear-gradient(180deg, #1a1a1e 0%, #151518 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* =========================================
+   TOOLBAR - Haptic-like buttons
+   ========================================= */
+
+#sidebar-toolbar {
+  display: none;  /* Hidden - buttons moved to header */
+}
+
+.toolbar-button {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 14px;
+  font-weight: 400;
+  background: transparent;
+  border: none;
+  transition:
+    background 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.toolbar-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.toolbar-button:active {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(0) scale(0.95);
+  box-shadow: none;
+}
+
+#new-branch-button {
+  display: none;
+}
+
+/* =========================================
+   URL/SEARCH INPUT - Animated focus ring
+   ========================================= */
+
+#sidebar-url-bar {
+  padding: 0 12px 10px 12px;
+  margin-top: 8px;  /* Push down to make autocomplete dropdown visible */
+}
+
+#sidebar-url-input {
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#sidebar-url-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+#sidebar-url-input:focus {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(100, 150, 255, 0.5);
+  box-shadow:
+    0 0 0 3px rgba(100, 150, 255, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* =========================================
+   HIDE SECTION HEADERS
+   ========================================= */
+
+.section-header {
+  display: none;
+}
+
+#pinned-section {
+  display: none;
+}
+
+/* =========================================
+   BRANCHES SECTION
+   ========================================= */
+
+#branches-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+#branch-tree {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 8px;
+}
+
+/* Empty state */
+#branch-tree:empty::after {
+  content: "No branches yet";
+  display: block;
+  text-align: center;
+  padding: 48px 20px;
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+/* =========================================
+   BRANCH ITEM - Lift effect on hover
+   ========================================= */
+
+.branch-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  padding-right: 28px;
+  cursor: pointer;
+  border-radius: 6px;
+  margin: 1px 0;
+  position: relative;
+  min-height: 32px;
+  transition:
+    background 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.branch-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateX(2px);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+/* Active branch - Arc-style accent bar */
+.branch-item.active {
+  background: rgba(100, 150, 255, 0.08);
+  box-shadow:
+    inset 3px 0 0 rgba(100, 150, 255, 0.7),
+    0 0 12px rgba(100, 150, 255, 0.08);
+}
+
+.branch-item.active:hover {
+  background: rgba(100, 150, 255, 0.12);
+}
+
+/* Entry animation for new branches */
+@keyframes branchSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.branch-item {
+  animation: branchSlideIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =========================================
+   CLOSE BUTTON - Scale + color transition
+   ========================================= */
+
+.branch-close-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0;
+  transform: translateY(-50%) scale(0.85);
+  transition:
+    opacity 0.12s ease,
+    transform 0.12s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.12s ease,
+    color 0.12s ease;
+}
+
+.branch-item:hover .branch-close-btn {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+.branch-close-btn:hover {
+  transform: translateY(-50%) scale(1.1);
+  background: rgba(255, 80, 80, 0.12);
+  color: rgba(255, 120, 120, 1);
+}
+
+.branch-close-btn:active {
+  transform: translateY(-50%) scale(0.95);
+  background: rgba(255, 80, 80, 0.2);
+}
+
+/* =========================================
+   INDENTATION - Tree structure
+   ========================================= */
+
+.branch-item[data-depth="0"] { padding-left: 8px; }
+.branch-item[data-depth="1"] { padding-left: 22px; }
+.branch-item[data-depth="2"] { padding-left: 36px; }
+.branch-item[data-depth="3"] { padding-left: 50px; }
+.branch-item[data-depth="4"] { padding-left: 64px; }
+.branch-item[data-depth="5"] { padding-left: 78px; }
+
+/* Subtle indent guides */
+.branch-item[data-depth]:not([data-depth="0"])::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 1px;
+}
+
+.branch-item[data-depth="1"]::before { left: 13px; }
+.branch-item[data-depth="2"]::before { left: 27px; }
+.branch-item[data-depth="3"]::before { left: 41px; }
+.branch-item[data-depth="4"]::before { left: 55px; }
+.branch-item[data-depth="5"]::before { left: 69px; }
+
+/* =========================================
+   COLLAPSE TOGGLE - Spring rotation
+   ========================================= */
+
+.branch-toggle {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 4px;
+  color: rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.branch-toggle::before {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.branch-toggle:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.branch-toggle:hover::before {
+  transform: scale(1.15);
+}
+
+.branch-toggle.has-children {
+  cursor: pointer;
+}
+
+.branch-toggle.collapsed::before {
+  content: "›";
+  font-size: 14px;
+  font-weight: 300;
+}
+
+.branch-toggle.expanded::before {
+  content: "›";
+  font-size: 14px;
+  font-weight: 300;
+  transform: rotate(90deg);
+  display: inline-block;
+}
+
+.branch-toggle.expanded:hover::before {
+  transform: rotate(90deg) scale(1.15);
+}
+
+.branch-toggle.no-children {
+  visibility: hidden;
+}
+
+/* =========================================
+   FAVICON - Subtle depth
+   ========================================= */
+
+.branch-favicon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.branch-favicon img {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  border: 0.5px solid rgba(255, 255, 255, 0.06);
+}
+
+.branch-favicon .fallback-icon {
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+/* =========================================
+   BRANCH CONTENT
+   ========================================= */
+
+.branch-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.branch-title {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.85);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
+  letter-spacing: 0.01em;
+}
+
+.branch-source {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.branch-indicator {
+  display: none;
+}
+
+/* =========================================
+   SLEEPING STATE
+   ========================================= */
+
+.branch-item.sleeping {
+  opacity: 0.45;
+}
+
+.branch-item.sleeping .branch-title {
+  font-style: italic;
+}
+
+.branch-item.parent-collapsed {
+  display: none;
+}
+
+/* =========================================
+   STATUS BAR
+   ========================================= */
+
+#branch-status {
+  padding: 10px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.25);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+/* =========================================
+   SCROLLBAR - Fade on hover
+   ========================================= */
+
+#branch-tree::-webkit-scrollbar {
+  width: 6px;
+}
+
+#branch-tree::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#branch-tree::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+  transition: background 0.3s ease;
+}
+
+#branch-tree:hover::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+#branch-tree::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* =========================================
+   CONTEXT MENU - Entrance animation
+   ========================================= */
+
+.branch-context-menu {
+  position: fixed;
+  background: #222225;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 4px 0;
+  min-width: 160px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.03);
+  z-index: 1000;
+  animation: contextMenuIn 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: top left;
+}
+
+@keyframes contextMenuIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.branch-context-menu-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.1s ease;
+}
+
+.branch-context-menu-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.branch-context-menu-item i {
+  opacity: 0.5;
+  font-size: 13px;
+}
+
+.branch-context-menu-separator {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 4px 0;
+}
+
+/* =========================================
+   SIDEBAR COLLAPSED STATE
+   ========================================= */
+
+#branch-sidebar.collapsed {
+  width: 0;
+  min-width: 0;
+  border-right: none;
+  overflow: hidden;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#branch-sidebar.collapsed > * {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s ease;
+}
+
+#branch-sidebar:not(.collapsed) {
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body:has(#branch-sidebar.collapsed) #searchbar {
+  left: 0 !important;
+  width: 100% !important;
+}
+
+/* =========================================
+   FLOATING EXPAND BUTTON
+   ========================================= */
+
+.floating-expand-btn {
+  position: fixed;
+  top: calc(44px + var(--control-space-top));
+  left: 8px;
+  width: 32px;
+  height: 32px;
+  background: rgba(26, 26, 30, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition:
+    background 0.15s ease,
+    transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.15s ease;
+}
+
+.floating-expand-btn:hover {
+  background: rgba(40, 40, 45, 0.98);
+  color: rgba(255, 255, 255, 0.9);
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+
+.floating-expand-btn:active {
+  transform: scale(0.95);
+}
+
+.floating-expand-btn[hidden] {
+  display: none;
+}
+
+/* =========================================
+   REDUCED MOTION - Accessibility
+   ========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =========================================
+   HEADER BUTTONS - Arc-style
+   ========================================= */
+
+.header-branch-btn {
+  font-size: 16px;
+  font-weight: 500;
+  color: inherit;  /* Inherit from theme */
+  opacity: 0.7;
+  background: transparent;
+  border: none;
+  width: 32px;
+  height: 36px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.15s ease,
+    transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.header-branch-btn:hover {
+  background: rgba(128, 128, 128, 0.15);
+  opacity: 1;
+}
+
+.header-branch-btn:active {
+  background: rgba(128, 128, 128, 0.2);
+  transform: scale(0.95);
+}
+
+#header-toggle-sidebar-btn {
+  font-size: 14px;
+}
+
+#header-new-branch-btn {
+  font-size: 22px;
+  font-weight: 300;
+}
