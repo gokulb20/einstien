@@ -55,6 +55,7 @@ async function create (tabId, parentId, url, title) {
     url: url || '',
     title: title || '',
     history: initialHistory,  // Navigation history within this branch
+    historyIndex: initialHistory.length > 0 ? 0 : -1,  // Current position in history (-1 = no history)
     createdAt: now,
     lastActiveAt: now,
     state: 'awake'
@@ -118,22 +119,37 @@ async function update (branchId, data) {
 }
 
 // Add a URL to the branch's navigation history
-async function addToHistory (branchId, url, title) {
+// Implements smart branching: if not at end of history, truncates forward entries
+async function addToHistory (branchId, url, title, options) {
   if (!branches[branchId]) return false
   if (!url) return false
 
   var branch = branches[branchId]
   var history = branch.history || []
+  var historyIndex = branch.historyIndex !== undefined ? branch.historyIndex : history.length - 1
 
-  // Don't add if same as last entry (avoid duplicates from page refreshes)
-  var lastEntry = history[history.length - 1]
-  if (lastEntry && lastEntry.url === url) {
+  // Check if this is a breadcrumb navigation (position change, not new entry)
+  if (options && options.isBreadcrumbNav) {
+    return false  // Don't add entry for breadcrumb navigation
+  }
+
+  // Check if same as current entry (avoid duplicates from page refreshes)
+  var currentEntry = history[historyIndex]
+  if (currentEntry && currentEntry.url === url) {
     // Just update title if it changed
-    if (title && lastEntry.title !== title) {
-      lastEntry.title = title
+    if (title && currentEntry.title !== title) {
+      currentEntry.title = title
       await update(branchId, { history: history })
     }
     return false
+  }
+
+  // Smart branching: if not at end of history, truncate forward entries
+  // This happens when user navigates back then goes to a new page
+  if (historyIndex < history.length - 1) {
+    // Truncate: remove all entries after current position
+    history = history.slice(0, historyIndex + 1)
+    console.log('[Branch] Truncated forward history at index', historyIndex)
   }
 
   // Add new history entry
@@ -143,13 +159,78 @@ async function addToHistory (branchId, url, title) {
     timestamp: Date.now()
   })
 
+  // Update index to point to new entry
+  var newIndex = history.length - 1
+
   // Keep last 50 entries max to avoid memory bloat
   if (history.length > 50) {
+    var trimCount = history.length - 50
     history = history.slice(-50)
+    newIndex = Math.max(0, newIndex - trimCount)
   }
 
-  await update(branchId, { history: history, url: url, title: title || branch.title })
+  await update(branchId, {
+    history: history,
+    historyIndex: newIndex,
+    url: url,
+    title: title || branch.title
+  })
   return true
+}
+
+// Navigate to a specific history index (for breadcrumb clicks)
+// This moves the cursor without truncating forward history
+async function navigateToHistoryIndex (branchId, index) {
+  if (!branches[branchId]) return null
+
+  var branch = branches[branchId]
+  var history = branch.history || []
+
+  // Validate index
+  if (index < 0 || index >= history.length) {
+    console.warn('[Branch] Invalid history index:', index, 'max:', history.length - 1)
+    return null
+  }
+
+  // Update the history index
+  await update(branchId, { historyIndex: index })
+
+  // Return the entry at this index so caller can navigate to it
+  return history[index]
+}
+
+// Get current history index for a branch
+function getHistoryIndex (branchId) {
+  if (!branches[branchId]) return -1
+  var branch = branches[branchId]
+  var historyIndex = branch.historyIndex
+
+  // Handle legacy branches without historyIndex
+  if (historyIndex === undefined || historyIndex === null) {
+    var history = branch.history || []
+    return history.length - 1
+  }
+
+  return historyIndex
+}
+
+// Get history with current position info
+function getHistoryWithPosition (branchId) {
+  if (!branches[branchId]) return { history: [], currentIndex: -1 }
+
+  var branch = branches[branchId]
+  var history = branch.history || []
+  var currentIndex = branch.historyIndex
+
+  // Handle legacy branches
+  if (currentIndex === undefined || currentIndex === null) {
+    currentIndex = history.length - 1
+  }
+
+  return {
+    history: history,
+    currentIndex: currentIndex
+  }
 }
 
 // Destroy a single branch (but never ROOT)
@@ -381,6 +462,9 @@ module.exports = {
   update,
   destroy,
   addToHistory,  // Navigation history tracking
+  navigateToHistoryIndex,  // Breadcrumb navigation (preserves forward history)
+  getHistoryIndex,  // Get current position in history
+  getHistoryWithPosition,  // Get history array with current index
   getChildren,
   getDescendants,
   getAncestors,

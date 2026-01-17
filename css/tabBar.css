@@ -1,7 +1,11 @@
+/* =========================================
+   GLASSMORPHIC NAVBAR - Dark, Minimal, Beautiful
+   ========================================= */
+
 #navbar {
   display: flex;
-  height: calc(36px + var(--control-space-top));
-  transition: 0.2s background-color;
+  align-items: center;
+  height: calc(40px + var(--control-space-top));
   width: 100%;
   -webkit-user-select: none;
   position: relative;
@@ -10,72 +14,64 @@
   padding-top: var(--control-space-top);
   padding-left: var(--control-space-left);
   padding-right: var(--control-space-right);
+
+  /* Glassmorphic effect */
+  background: rgba(18, 18, 22, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
 }
 
-/* when the tab-group is white, we need a line to separate it from the webviews */
-
+/* Remove the old bottom line - glassmorphic border replaces it */
 #navbar:before {
-  content: "";
-  width: 100vw;
-  height: 1px;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  background: rgba(0, 0, 0, 0.075);
-}
-
-/* dark colors don't need to be darkened as much for contrast */
-
-.dark-theme #navbar:before {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-/* navbar buttons */
-
-#toolbar-navigation-buttons {
-  width: 2rem;
-  transition: 0.1s width;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-#toolbar-navigation-buttons.can-go-forward:hover {
-  width: 4rem;
-}
-
-body.is-edit-mode #toolbar-navigation-buttons {
   display: none;
 }
 
-#back-button,
-#forward-button {
-  opacity: 1;
-  transition: none;
-  padding: 0;
-  width: 2rem;
-}
-#back-button:disabled,
-#forward-button:disabled {
-  opacity: 0.2;
+/* Light mode glassmorphic (fallback) */
+body:not(.dark-mode):not(.dark-theme) #navbar {
+  background: rgba(245, 245, 250, 0.9);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* Remove default space from being inline-block */
-#forward-button {
-  margin-left: -0.25rem;
+/* Navigation buttons removed - using breadcrumb navigation */
+#toolbar-navigation-buttons {
+  display: none !important;
 }
 
+/* Menu button - minimal glassmorphic style */
 #menu-button {
   width: 36px;
+  height: 32px;
   padding: 0;
+  margin-left: 4px;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.6);
+  transition: all 0.15s ease;
+  display: none;
 }
 
-#menu-button {
-  display: none;
+#menu-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 body.windows #menu-button,
 body.linux #menu-button {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Light mode menu button */
+body:not(.dark-mode):not(.dark-theme) #menu-button {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+body:not(.dark-mode):not(.dark-theme) #menu-button:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.8);
 }
 
 /* tab layout */
@@ -448,52 +444,89 @@ body:not(.dark-theme) .progress-bar {
 }
 
 /* =========================================
-   BRANCH BROWSER: Breadcrumb Navigation
+   BREADCRUMB NAVIGATION - Smart History Trail
    ========================================= */
 
 #breadcrumb-trail {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 0 12px;
+  gap: 2px;
+  padding: 0 16px;
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  height: 36px;
+  height: 40px;
 }
 
+/* Base breadcrumb item */
 .breadcrumb-item {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.45);
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 6px 10px;
+  border-radius: 6px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 150px;
-  transition: all 0.12s ease;
+  max-width: 160px;
+  transition: all 0.15s ease;
 }
 
 .breadcrumb-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Past items (before current) - clickable to go back */
+.breadcrumb-item.past {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.breadcrumb-item.past:hover {
   background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.9);
 }
 
+/* Current item - highlighted, not clickable */
 .breadcrumb-item.current {
-  color: rgba(255, 255, 255, 0.9);
-  cursor: default;
+  color: rgba(255, 255, 255, 0.95);
   font-weight: 500;
+  cursor: default;
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .breadcrumb-item.current:hover {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.06);
 }
 
+/* Future items (after current) - clickable to go forward */
+.breadcrumb-item.future {
+  color: rgba(255, 255, 255, 0.35);
+  font-style: italic;
+}
+
+.breadcrumb-item.future:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.75);
+  font-style: normal;
+}
+
+/* Separator between breadcrumbs */
 .breadcrumb-separator {
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 10px;
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 11px;
   flex-shrink: 0;
+  user-select: none;
+  padding: 0 2px;
+}
+
+/* Ellipsis for truncated history */
+.breadcrumb-ellipsis {
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 12px;
+  padding: 0 4px;
   user-select: none;
 }
 
@@ -502,20 +535,46 @@ body:not(.dark-theme) .progress-bar {
   display: none;
 }
 
-/* Light mode breadcrumbs */
-body:not(.dark-mode) .breadcrumb-item {
-  color: rgba(0, 0, 0, 0.6);
+/* =========================================
+   LIGHT MODE BREADCRUMBS
+   ========================================= */
+
+body:not(.dark-mode):not(.dark-theme) .breadcrumb-item {
+  color: rgba(0, 0, 0, 0.45);
 }
 
-body:not(.dark-mode) .breadcrumb-item:hover {
-  background: rgba(0, 0, 0, 0.06);
+body:not(.dark-mode):not(.dark-theme) .breadcrumb-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.8);
+}
+
+body:not(.dark-mode):not(.dark-theme) .breadcrumb-item.past {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+body:not(.dark-mode):not(.dark-theme) .breadcrumb-item.past:hover {
+  background: rgba(0, 0, 0, 0.08);
   color: rgba(0, 0, 0, 0.9);
 }
 
-body:not(.dark-mode) .breadcrumb-item.current {
-  color: rgba(0, 0, 0, 0.85);
+body:not(.dark-mode):not(.dark-theme) .breadcrumb-item.current {
+  color: rgba(0, 0, 0, 0.9);
+  background: rgba(0, 0, 0, 0.04);
 }
 
-body:not(.dark-mode) .breadcrumb-separator {
-  color: rgba(0, 0, 0, 0.3);
+body:not(.dark-mode):not(.dark-theme) .breadcrumb-item.future {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+body:not(.dark-mode):not(.dark-theme) .breadcrumb-item.future:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+body:not(.dark-mode):not(.dark-theme) .breadcrumb-separator {
+  color: rgba(0, 0, 0, 0.2);
+}
+
+body:not(.dark-mode):not(.dark-theme) .breadcrumb-ellipsis {
+  color: rgba(0, 0, 0, 0.25);
 }
