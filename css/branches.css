@@ -713,3 +713,75 @@ body:has(#branch-sidebar.collapsed) #searchbar {
 .header-branch-btn {
   display: none;
 }
+
+/* =========================================
+   DRAG & DROP STYLES
+   ========================================= */
+
+/* Drop indicator line */
+.branch-drop-indicator {
+  position: absolute;
+  height: 2px;
+  background: rgba(100, 180, 255, 0.8);
+  border-radius: 1px;
+  pointer-events: none;
+  z-index: 100;
+  transition: top 0.05s ease, left 0.1s ease;
+  box-shadow: 0 0 6px rgba(100, 180, 255, 0.4);
+}
+
+/* Drop indicator circle on the left */
+.branch-drop-indicator::before {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  background: rgba(100, 180, 255, 1);
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(100, 180, 255, 0.6);
+}
+
+/* Invalid drop indicator (e.g., dropping onto descendant) */
+.branch-drop-indicator.invalid {
+  background: rgba(255, 100, 100, 0.6);
+  box-shadow: 0 0 6px rgba(255, 100, 100, 0.3);
+}
+
+.branch-drop-indicator.invalid::before {
+  background: rgba(255, 100, 100, 1);
+  box-shadow: 0 0 4px rgba(255, 100, 100, 0.5);
+}
+
+/* Dragging state for branch items */
+.branch-item.dragging {
+  opacity: 0.4;
+  background: rgba(100, 180, 255, 0.1);
+  transform: scale(0.98);
+}
+
+/* Tree container while dragging */
+#branch-tree.is-dragging {
+  cursor: grabbing;
+}
+
+#branch-tree.is-dragging .branch-item {
+  cursor: grabbing;
+}
+
+/* Hover state during drag - subtle highlight */
+#branch-tree.is-dragging .branch-item:not(.dragging):hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Make branch items feel draggable */
+.branch-item {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.branch-item:active:not(.dragging) {
+  cursor: grabbing;
+}

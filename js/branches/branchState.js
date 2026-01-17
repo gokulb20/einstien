@@ -271,7 +271,134 @@ function getChildren (branchId) {
       children.push(branches[id])
     }
   }
+  // Sort children by their sortOrder (or createdAt as fallback)
+  children.sort(function (a, b) {
+    var orderA = a.sortOrder !== undefined ? a.sortOrder : a.createdAt
+    var orderB = b.sortOrder !== undefined ? b.sortOrder : b.createdAt
+    return orderA - orderB
+  })
   return children
+}
+
+// Check if targetBranchId is a descendant of sourceBranchId (cycle detection)
+function isDescendant (sourceBranchId, targetBranchId) {
+  var descendants = getDescendants(sourceBranchId)
+  return descendants.some(function (d) { return d.id === targetBranchId })
+}
+
+// Reparent a branch to a new parent and/or position
+// newParentId: the new parent branch ID (null for root level)
+// insertIndex: position among siblings (0 = first, -1 or undefined = last)
+async function reparent (branchId, newParentId, insertIndex) {
+  if (!branches[branchId]) {
+    console.warn('[Branch] Cannot reparent non-existent branch:', branchId)
+    return false
+  }
+
+  // Never reparent ROOT
+  if (branchId === ROOT_BRANCH_ID) {
+    console.warn('[Branch] Cannot reparent ROOT branch')
+    return false
+  }
+
+  // Prevent cycles: can't move a branch into its own descendants
+  if (newParentId && isDescendant(branchId, newParentId)) {
+    console.warn('[Branch] Cannot reparent branch into its own descendant')
+    return false
+  }
+
+  // Can't parent to itself
+  if (branchId === newParentId) {
+    console.warn('[Branch] Cannot parent branch to itself')
+    return false
+  }
+
+  var branch = branches[branchId]
+  var oldParentId = branch.parentId
+
+  // If moving to root level (no parent), use ROOT as parent
+  var effectiveParentId = newParentId || ROOT_BRANCH_ID
+
+  // Get siblings at the new parent
+  var siblings = getChildren(effectiveParentId)
+
+  // Remove the branch from siblings list if it's already there (same parent move)
+  siblings = siblings.filter(function (s) { return s.id !== branchId })
+
+  // Calculate sort orders for all siblings
+  var now = Date.now()
+
+  // Determine insert position
+  var actualIndex = insertIndex
+  if (actualIndex === undefined || actualIndex === -1 || actualIndex > siblings.length) {
+    actualIndex = siblings.length // Insert at end
+  }
+  if (actualIndex < 0) {
+    actualIndex = 0
+  }
+
+  // Insert branch at the specified position and recalculate sort orders
+  siblings.splice(actualIndex, 0, branch)
+
+  // Update sort orders for all siblings
+  for (var i = 0; i < siblings.length; i++) {
+    await update(siblings[i].id, { sortOrder: now + i })
+  }
+
+  // Update the branch's parent
+  await update(branchId, { parentId: effectiveParentId })
+
+  console.log('[Branch] Reparented', branchId, 'from', oldParentId, 'to', effectiveParentId, 'at index', actualIndex)
+
+  return true
+}
+
+// Reorder a branch within its current siblings
+async function reorder (branchId, newIndex) {
+  if (!branches[branchId]) {
+    console.warn('[Branch] Cannot reorder non-existent branch:', branchId)
+    return false
+  }
+
+  var branch = branches[branchId]
+  var parentId = branch.parentId || ROOT_BRANCH_ID
+
+  // Get siblings
+  var siblings = getChildren(parentId)
+
+  // Find current index
+  var currentIndex = -1
+  for (var i = 0; i < siblings.length; i++) {
+    if (siblings[i].id === branchId) {
+      currentIndex = i
+      break
+    }
+  }
+
+  if (currentIndex === -1) {
+    console.warn('[Branch] Branch not found in siblings')
+    return false
+  }
+
+  // Remove from current position
+  siblings.splice(currentIndex, 1)
+
+  // Clamp new index
+  if (newIndex < 0) newIndex = 0
+  if (newIndex > siblings.length) newIndex = siblings.length
+
+  // Insert at new position
+  siblings.splice(newIndex, 0, branch)
+
+  // Update sort orders
+  var now = Date.now()
+  for (var i = 0; i < siblings.length; i++) {
+    await update(siblings[i].id, { sortOrder: now + i })
+  }
+
+  console.log('[Branch] Reordered', branchId, 'from index', currentIndex, 'to', newIndex)
+
+  return true
 }
 
 // Get all descendants of a branch (recursive)
@@ -481,5 +608,9 @@ module.exports = {
   isRoot,
   ensureRoot,
   getRootUrl,
-  getRootBranchId
+  getRootBranchId,
+  // Reorganization functions
+  isDescendant,
+  reparent,
+  reorder
 }

@@ -56,6 +56,26 @@ var branchPanel = {
   contextMenu: null,
   isNewTabMode: false, // Track if we're creating a new tab vs navigating current
 
+  // Drag & Drop state
+  dragState: {
+    isDragging: false,
+    draggedBranchId: null,
+    draggedElement: null,
+    dropIndicator: null,
+    targetBranchId: null,
+    targetIndex: -1,
+    targetDepth: 0,
+    startX: 0,
+    startY: 0,
+    currentX: 0,
+    currentY: 0
+  },
+
+  // Base indent per depth level (px)
+  INDENT_PER_LEVEL: 14,
+  // Minimum drag distance before drag starts
+  DRAG_THRESHOLD: 5,
+
   initialize: function () {
     this.container = document.getElementById('branch-sidebar')
     this.treeContainer = document.getElementById('branch-tree')
@@ -124,6 +144,9 @@ var branchPanel = {
 
     // Listen for tab events to update the tree
     this.setupEventListeners()
+
+    // Setup drag & drop
+    this.setupDragAndDrop()
 
     console.log('[BranchPanel] Initialized')
   },
@@ -259,6 +282,415 @@ var branchPanel = {
         self.closeContextMenu()
       }
     })
+  },
+
+  // =========================================
+  // DRAG & DROP FUNCTIONALITY
+  // =========================================
+
+  setupDragAndDrop: function () {
+    var self = this
+
+    // Create drop indicator element
+    this.dragState.dropIndicator = document.createElement('div')
+    this.dragState.dropIndicator.className = 'branch-drop-indicator'
+    this.dragState.dropIndicator.style.display = 'none'
+
+    // Add indicator to tree container
+    if (this.treeContainer) {
+      this.treeContainer.appendChild(this.dragState.dropIndicator)
+    }
+
+    // Global mouse move handler for drag tracking
+    document.addEventListener('mousemove', function (e) {
+      if (self.dragState.isDragging) {
+        self.handleDragMove(e)
+      }
+    })
+
+    // Global mouse up handler for drop
+    document.addEventListener('mouseup', function (e) {
+      if (self.dragState.isDragging) {
+        self.handleDragEnd(e)
+      }
+    })
+
+    console.log('[BranchPanel] Drag & drop initialized')
+  },
+
+  // Attach drag handlers to a branch item element
+  attachDragHandlers: function (element, branchId) {
+    var self = this
+
+    // Make element draggable via mouse events (not HTML5 drag)
+    element.addEventListener('mousedown', function (e) {
+      // Only left mouse button
+      if (e.button !== 0) return
+
+      // Don't start drag if clicking on toggle, close button, or other interactive elements
+      if (e.target.closest('.branch-toggle') ||
+          e.target.closest('.branch-close-btn') ||
+          e.target.closest('button')) {
+        return
+      }
+
+      self.handleDragStart(e, branchId, element)
+    })
+  },
+
+  handleDragStart: function (e, branchId, element) {
+    var self = this
+
+    // Store initial position
+    this.dragState.startX = e.clientX
+    this.dragState.startY = e.clientY
+    this.dragState.currentX = e.clientX
+    this.dragState.currentY = e.clientY
+    this.dragState.draggedBranchId = branchId
+    this.dragState.draggedElement = element
+
+    // Wait for threshold movement before actually starting drag
+    this.dragState.pendingDrag = true
+
+    // Temporary handlers for threshold detection
+    var moveHandler = function (moveEvent) {
+      var dx = moveEvent.clientX - self.dragState.startX
+      var dy = moveEvent.clientY - self.dragState.startY
+      var distance = Math.sqrt(dx * dx + dy * dy)
+
+      if (distance > self.DRAG_THRESHOLD && self.dragState.pendingDrag) {
+        // Start actual drag
+        self.dragState.pendingDrag = false
+        self.startActualDrag()
+        document.removeEventListener('mousemove', moveHandler)
+        document.removeEventListener('mouseup', upHandler)
+      }
+    }
+
+    var upHandler = function () {
+      // Mouse released before threshold - cancel pending drag
+      self.dragState.pendingDrag = false
+      self.dragState.draggedBranchId = null
+      self.dragState.draggedElement = null
+      document.removeEventListener('mousemove', moveHandler)
+      document.removeEventListener('mouseup', upHandler)
+    }
+
+    document.addEventListener('mousemove', moveHandler)
+    document.addEventListener('mouseup', upHandler)
+
+    e.preventDefault()
+  },
+
+  startActualDrag: function () {
+    var bs = getBranchState()
+    if (!bs) return
+
+    // Check if this is ROOT - can't drag ROOT
+    if (bs.isRoot(this.dragState.draggedBranchId)) {
+      console.log('[BranchPanel] Cannot drag ROOT branch')
+      this.resetDragState()
+      return
+    }
+
+    this.dragState.isDragging = true
+
+    // Add dragging class to element
+    if (this.dragState.draggedElement) {
+      this.dragState.draggedElement.classList.add('dragging')
+    }
+
+    // Add dragging class to container
+    if (this.treeContainer) {
+      this.treeContainer.classList.add('is-dragging')
+    }
+
+    // Show drop indicator
+    this.dragState.dropIndicator.style.display = 'block'
+
+    console.log('[BranchPanel] Started dragging:', this.dragState.draggedBranchId)
+  },
+
+  handleDragMove: function (e) {
+    if (!this.dragState.isDragging) return
+
+    this.dragState.currentX = e.clientX
+    this.dragState.currentY = e.clientY
+
+    // Calculate drop target based on mouse position
+    this.updateDropTarget(e)
+  },
+
+  updateDropTarget: function (e) {
+    var bs = getBranchState()
+    if (!bs || !this.treeContainer) return
+
+    var treeRect = this.treeContainer.getBoundingClientRect()
+    var mouseY = e.clientY
+    var mouseX = e.clientX
+
+    // Get all visible branch items
+    var items = this.treeContainer.querySelectorAll('.branch-item:not(.dragging)')
+    var itemsArray = Array.from(items)
+
+    if (itemsArray.length === 0) {
+      // No items - drop at root level
+      this.positionDropIndicator(0, treeRect.top + 8)
+      this.dragState.targetBranchId = null
+      this.dragState.targetIndex = 0
+      this.dragState.targetDepth = 0
+      return
+    }
+
+    // Find the item the mouse is over or between
+    var targetItem = null
+    var insertAfter = false
+    var closestDistance = Infinity
+
+    for (var i = 0; i < itemsArray.length; i++) {
+      var item = itemsArray[i]
+      var rect = item.getBoundingClientRect()
+      var itemMiddleY = rect.top + rect.height / 2
+
+      // Check if mouse is within this item's vertical bounds
+      if (mouseY >= rect.top && mouseY <= rect.bottom) {
+        targetItem = item
+        // If below middle, insert after; otherwise insert before
+        insertAfter = mouseY > itemMiddleY
+        break
+      }
+
+      // Track closest item for when mouse is between items
+      var distanceToMiddle = Math.abs(mouseY - itemMiddleY)
+      if (distanceToMiddle < closestDistance) {
+        closestDistance = distanceToMiddle
+        targetItem = item
+        insertAfter = mouseY > itemMiddleY
+      }
+    }
+
+    if (!targetItem) return
+
+    var targetBranchId = targetItem.getAttribute('data-branch-id')
+    var targetBranch = bs.get(targetBranchId)
+    if (!targetBranch) return
+
+    // Can't drop onto self or descendants
+    if (targetBranchId === this.dragState.draggedBranchId ||
+        bs.isDescendant(this.dragState.draggedBranchId, targetBranchId)) {
+      this.dragState.dropIndicator.classList.add('invalid')
+    } else {
+      this.dragState.dropIndicator.classList.remove('invalid')
+    }
+
+    // Calculate indent level based on horizontal mouse position
+    var targetRect = targetItem.getBoundingClientRect()
+    var currentDepth = parseInt(targetItem.getAttribute('data-depth')) || 0
+    var baseIndentX = treeRect.left + 10 // Base position for depth 0
+
+    // Calculate depth from mouse X position
+    var relativeX = mouseX - baseIndentX
+    var calculatedDepth = Math.floor(relativeX / this.INDENT_PER_LEVEL)
+
+    // Determine the valid depth range
+    var minDepth = 0
+    var maxDepth
+
+    if (insertAfter) {
+      // When inserting after an item, max depth is current item's depth + 1 (become its child)
+      // But only if the item has no collapsed children or is the last visible item
+      var hasVisibleChildren = this.hasVisibleChildren(targetBranchId)
+      maxDepth = hasVisibleChildren ? currentDepth : currentDepth + 1
+    } else {
+      // When inserting before an item, max depth is current item's depth
+      maxDepth = currentDepth
+    }
+
+    // Clamp depth
+    var finalDepth = Math.max(minDepth, Math.min(maxDepth, calculatedDepth))
+
+    // Determine the parent based on depth and position
+    var newParentId = this.determineParentFromDepth(targetItem, insertAfter, finalDepth, itemsArray)
+
+    // Calculate insert index among siblings
+    var insertIndex = this.calculateInsertIndex(newParentId, targetBranchId, insertAfter, finalDepth)
+
+    // Update drag state
+    this.dragState.targetBranchId = newParentId
+    this.dragState.targetIndex = insertIndex
+    this.dragState.targetDepth = finalDepth
+
+    // Position the drop indicator
+    var indicatorY = insertAfter ? targetRect.bottom : targetRect.top
+    this.positionDropIndicator(finalDepth, indicatorY)
+  },
+
+  hasVisibleChildren: function (branchId) {
+    // Check if the branch has visible children (not collapsed)
+    if (this.collapsedBranches.has(branchId)) {
+      return false
+    }
+    var bs = getBranchState()
+    if (!bs) return false
+    var children = bs.getChildren(branchId)
+    return children && children.length > 0
+  },
+
+  determineParentFromDepth: function (targetItem, insertAfter, targetDepth, allItems) {
+    var bs = getBranchState()
+    if (!bs) return null
+
+    var targetBranchId = targetItem.getAttribute('data-branch-id')
+    var targetBranch = bs.get(targetBranchId)
+    var currentDepth = parseInt(targetItem.getAttribute('data-depth')) || 0
+
+    if (insertAfter) {
+      if (targetDepth > currentDepth) {
+        // Becoming a child of the target item
+        return targetBranchId
+      } else if (targetDepth === currentDepth) {
+        // Same level as target - use target's parent
+        return targetBranch.parentId || bs.getRootBranchId()
+      } else {
+        // Outdenting - find ancestor at the right level
+        var ancestors = bs.getAncestors(targetBranchId)
+        var levelDiff = currentDepth - targetDepth
+        if (levelDiff <= ancestors.length) {
+          return ancestors[levelDiff - 1] ? ancestors[levelDiff - 1].id : bs.getRootBranchId()
+        }
+        return bs.getRootBranchId()
+      }
+    } else {
+      // Inserting before - use same parent as target
+      if (targetDepth === currentDepth) {
+        return targetBranch.parentId || bs.getRootBranchId()
+      } else if (targetDepth < currentDepth) {
+        // Outdenting relative to target
+        var ancestors = bs.getAncestors(targetBranchId)
+        var levelDiff = currentDepth - targetDepth
+        if (levelDiff <= ancestors.length) {
+          return ancestors[levelDiff - 1] ? ancestors[levelDiff - 1].id : bs.getRootBranchId()
+        }
+        return bs.getRootBranchId()
+      } else {
+        // Can't indent more than target when inserting before
+        return targetBranch.parentId || bs.getRootBranchId()
+      }
+    }
+  },
+
+  calculateInsertIndex: function (parentId, targetBranchId, insertAfter, targetDepth) {
+    var bs = getBranchState()
+    if (!bs) return 0
+
+    var siblings = bs.getChildren(parentId)
+    var targetIndex = -1
+
+    for (var i = 0; i < siblings.length; i++) {
+      if (siblings[i].id === targetBranchId) {
+        targetIndex = i
+        break
+      }
+    }
+
+    if (targetIndex === -1) {
+      // Target not a direct sibling - insert at end
+      return siblings.length
+    }
+
+    return insertAfter ? targetIndex + 1 : targetIndex
+  },
+
+  positionDropIndicator: function (depth, y) {
+    if (!this.dragState.dropIndicator || !this.treeContainer) return
+
+    var treeRect = this.treeContainer.getBoundingClientRect()
+    var indicatorY = y - treeRect.top + this.treeContainer.scrollTop
+
+    // Calculate left position based on depth
+    var leftOffset = 10 + (depth * this.INDENT_PER_LEVEL) + 16 // 16 for toggle width
+
+    this.dragState.dropIndicator.style.top = indicatorY + 'px'
+    this.dragState.dropIndicator.style.left = leftOffset + 'px'
+    this.dragState.dropIndicator.style.right = '8px'
+  },
+
+  handleDragEnd: async function (e) {
+    if (!this.dragState.isDragging) {
+      this.resetDragState()
+      return
+    }
+
+    var bs = getBranchState()
+    if (!bs) {
+      this.resetDragState()
+      return
+    }
+
+    // Check if drop is valid
+    var draggedBranchId = this.dragState.draggedBranchId
+    var targetParentId = this.dragState.targetBranchId
+    var targetIndex = this.dragState.targetIndex
+
+    // Validate drop
+    // Use ROOT as parent if targetParentId is null (root level drop)
+    var effectiveParentId = targetParentId || bs.getRootBranchId()
+    var isValid = draggedBranchId &&
+                  !bs.isRoot(draggedBranchId) &&
+                  draggedBranchId !== effectiveParentId &&
+                  !bs.isDescendant(draggedBranchId, effectiveParentId)
+
+    if (isValid) {
+      console.log('[BranchPanel] Dropping', draggedBranchId, 'to parent', targetParentId, 'at index', targetIndex)
+
+      // Perform the reparent operation
+      var success = await bs.reparent(draggedBranchId, targetParentId, targetIndex)
+
+      if (success) {
+        // Update the tab's parentBranchId
+        var branch = bs.get(draggedBranchId)
+        if (branch && branch.tabId && safeTabs()) {
+          var tab = safeTabs().get(branch.tabId)
+          if (tab) {
+            safeTabs().update(branch.tabId, { parentBranchId: targetParentId })
+          }
+        }
+
+        // Re-render the tree
+        this.render()
+      }
+    } else {
+      console.log('[BranchPanel] Invalid drop - cancelled')
+    }
+
+    this.resetDragState()
+  },
+
+  resetDragState: function () {
+    // Remove dragging class from element
+    if (this.dragState.draggedElement) {
+      this.dragState.draggedElement.classList.remove('dragging')
+    }
+
+    // Remove dragging class from container
+    if (this.treeContainer) {
+      this.treeContainer.classList.remove('is-dragging')
+    }
+
+    // Hide drop indicator
+    if (this.dragState.dropIndicator) {
+      this.dragState.dropIndicator.style.display = 'none'
+      this.dragState.dropIndicator.classList.remove('invalid')
+    }
+
+    // Reset state
+    this.dragState.isDragging = false
+    this.dragState.pendingDrag = false
+    this.dragState.draggedBranchId = null
+    this.dragState.draggedElement = null
+    this.dragState.targetBranchId = null
+    this.dragState.targetIndex = -1
+    this.dragState.targetDepth = 0
   },
 
   collapseAll: function () {
@@ -783,9 +1215,18 @@ var branchPanel = {
     var tree = bs ? bs.getTree() : []
     var selectedTabId = safeTabs() ? safeTabs().getSelected() : null
 
+    // Preserve drop indicator before clearing
+    var dropIndicator = this.dragState.dropIndicator
+    var indicatorParent = dropIndicator ? dropIndicator.parentNode : null
+
     // Clear existing content safely
     while (this.treeContainer.firstChild) {
       this.treeContainer.removeChild(this.treeContainer.firstChild)
+    }
+
+    // Re-add drop indicator if it was in the tree
+    if (dropIndicator && indicatorParent === this.treeContainer) {
+      this.treeContainer.appendChild(dropIndicator)
     }
 
     // Render branches - but SKIP ROOT itself (it's the invisible starting point)
@@ -902,6 +1343,9 @@ var branchPanel = {
       e.preventDefault()
       self.showContextMenu(branch, e.clientX, e.clientY)
     })
+
+    // Attach drag & drop handlers
+    this.attachDragHandlers(item, branch.id)
 
     this.treeContainer.appendChild(item)
 
