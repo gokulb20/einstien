@@ -111,3 +111,35 @@ a {
 .dark-theme .has-thin-scrollbar::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.6);
 }
+
+/* =========================================
+   NAVIGATION POLISH: Background Tab Notification
+   ========================================= */
+
+.background-tab-notification {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.background-tab-notification.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.dark-mode .background-tab-notification {
+  background: rgba(255, 255, 255, 0.9);
+  color: black;
+}

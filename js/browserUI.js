@@ -47,7 +47,12 @@ function addTab (tabId = tabs.add(), options = {}) {
     destroyTab(tabs.getSelected())
   }
 
-  tabBar.addTab(tabId)
+  // Pass animation options to tabBar for visual feedback
+  var tabData = tabs.get(tabId)
+  tabBar.addTab(tabId, {
+    isBackgroundTab: options.openInBackground,
+    isSiblingTab: tabData && tabData.isSiblingTab
+  })
   webviews.add(tabId)
 
   if (!options.openInBackground) {
@@ -326,6 +331,27 @@ tabBar.events.on('tab-closed', function (id) {
   closeTab(id)
 })
 
+/* Shows a brief visual notification when a background tab is created */
+function showBackgroundTabNotification () {
+  // Create or reuse notification element
+  var notification = document.getElementById('background-tab-notification')
+  if (!notification) {
+    notification = document.createElement('div')
+    notification.id = 'background-tab-notification'
+    notification.className = 'background-tab-notification'
+    document.body.appendChild(notification)
+  }
+
+  notification.textContent = 'New tab created in background'
+  notification.classList.add('visible')
+
+  // Auto-hide after 1.5 seconds
+  clearTimeout(notification.hideTimeout)
+  notification.hideTimeout = setTimeout(function () {
+    notification.classList.remove('visible')
+  }, 1500)
+}
+
 module.exports = {
   addTask,
   addTab,
@@ -336,5 +362,6 @@ module.exports = {
   switchToTask,
   switchToTab,
   moveTabLeft,
-  moveTabRight
+  moveTabRight,
+  showBackgroundTabNotification
 }

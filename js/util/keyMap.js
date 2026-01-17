@@ -1,6 +1,8 @@
 var defaultKeyMap = {
   quitMin: 'mod+q',
   addTab: 'mod+t',
+  addBackgroundTab: 'option+t',
+  addSiblingTab: 'shift+option+t',
   addPrivateTab: 'shift+mod+p',
   duplicateTab: 'shift+mod+d',
   addTask: 'mod+n',

@@ -211,11 +211,26 @@ const tabBar = {
     }
     tabBar.handleSizeChange()
   },
-  addTab: function (tabId) {
+  addTab: function (tabId, options = {}) {
     var tab = tabs.get(tabId)
     var index = tabs.getIndex(tabId)
 
     var tabEl = tabBar.createTab(tab)
+
+    // Apply animation classes based on tab creation type
+    tabEl.classList.add('tab-new')
+    if (options.isBackgroundTab) {
+      tabEl.classList.add('tab-background-new')
+    }
+    if (options.isSiblingTab || tab.isSiblingTab) {
+      tabEl.classList.add('tab-sibling-new')
+    }
+
+    // Remove animation classes after animation completes
+    setTimeout(function () {
+      tabEl.classList.remove('tab-new', 'tab-background-new', 'tab-sibling-new')
+    }, 1500)
+
     tabBar.containerInner.insertBefore(tabEl, tabBar.containerInner.childNodes[index])
     tabBar.tabElementMap[tabId] = tabEl
     tabBar.handleSizeChange()

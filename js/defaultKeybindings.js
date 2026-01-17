@@ -31,6 +31,58 @@ const defaultKeybindings = {
       browserUI.addTab()
     })
 
+    // Alt+T / Option+T - Create a new tab truly in the background
+    // User stays on current page, new tab appears in tab bar with visual glow
+    // User can click on it later or use Cmd+Tab to switch to it
+    keybindings.defineShortcut('addBackgroundTab', function () {
+      if (modalMode.enabled()) {
+        return
+      }
+
+      if (focusMode.enabled()) {
+        focusMode.warn()
+        return
+      }
+
+      var newTabId = tabs.add({
+        isBackgroundTab: true
+      })
+      browserUI.addTab(newTabId, {
+        enterEditMode: false,
+        openInBackground: true  // True background - don't switch to it at all
+      })
+
+      // Show brief visual notification that tab was created
+      browserUI.showBackgroundTabNotification()
+    })
+
+    // Shift+Alt+T / Shift+Option+T - Create a sibling tab (same branch level)
+    // For branch-based navigation: creates a tab at the same level, not as a child
+    // Opens edit mode so user can enter URL, with green accent visual indicator
+    keybindings.defineShortcut('addSiblingTab', function () {
+      if (modalMode.enabled()) {
+        return
+      }
+
+      if (focusMode.enabled()) {
+        focusMode.warn()
+        return
+      }
+
+      var currentTab = tabs.get(tabs.getSelected())
+      var newTabId = tabs.add({
+        // Pass the parent's branch info so this becomes a sibling, not a child
+        parentBranchId: currentTab ? currentTab.parentBranchId : null,
+        isSiblingTab: true
+      })
+      browserUI.addTab(newTabId, {
+        enterEditMode: true,
+        openInBackground: false
+      })
+      // Mark this as a sibling tab for visual feedback (green accent)
+      document.body.classList.add('sibling-tab-mode')
+    })
+
     keybindings.defineShortcut('addPrivateTab', function () {
       /* new tabs can't be created in modal mode */
       if (modalMode.enabled()) {

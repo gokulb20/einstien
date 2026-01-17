@@ -79,6 +79,8 @@ const tabEditor = {
     searchbar.hide()
 
     document.body.classList.remove('is-edit-mode')
+    // Clear navigation mode classes
+    document.body.classList.remove('background-tab-mode', 'sibling-tab-mode')
 
     webviews.hidePlaceholder('editMode')
   },
