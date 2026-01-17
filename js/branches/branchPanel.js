@@ -31,7 +31,8 @@ console.log('[BranchPanel] browserUI.addTab:', typeof browserUI.addTab)
 console.log('[BranchPanel] browserUI.switchToTab:', typeof browserUI.switchToTab)
 console.log('[BranchPanel] browserUI.closeTab:', typeof browserUI.closeTab)
 
-var SIDEBAR_WIDTH = 260
+var SIDEBAR_WIDTH_EXPANDED = 260
+var SIDEBAR_WIDTH_COLLAPSED = 48
 
 var MAX_PINNED_SITES = 6
 
@@ -284,20 +285,23 @@ var branchPanel = {
   },
 
   toggleSidebar: function () {
-    var wasCollapsed = this.isSidebarCollapsed
     this.isSidebarCollapsed = !this.isSidebarCollapsed
 
-    // Update sidebar class
+    // Update sidebar class - toggle between expanded and collapsed-minimal (favicon-only)
     if (this.isSidebarCollapsed) {
-      this.container.classList.add('collapsed')
+      this.container.classList.remove('collapsed')
+      this.container.classList.add('collapsed-minimal')
     } else {
+      this.container.classList.remove('collapsed-minimal')
       this.container.classList.remove('collapsed')
     }
 
     // Adjust webview margin - adjustMargin is ADDITIVE, use difference!
-    // Collapsing: remove sidebar width (-260)
-    // Expanding: add sidebar width (+260)
-    var marginDelta = this.isSidebarCollapsed ? -SIDEBAR_WIDTH : SIDEBAR_WIDTH
+    // Collapsing: 260 -> 48 = -212
+    // Expanding: 48 -> 260 = +212
+    var marginDelta = this.isSidebarCollapsed
+      ? -(SIDEBAR_WIDTH_EXPANDED - SIDEBAR_WIDTH_COLLAPSED)
+      : (SIDEBAR_WIDTH_EXPANDED - SIDEBAR_WIDTH_COLLAPSED)
     try {
       webviews.adjustMargin([0, 0, 0, marginDelta])
     } catch (e) {
@@ -309,28 +313,29 @@ var branchPanel = {
       this.toggleSidebarBtn.textContent = this.isSidebarCollapsed ? '▶' : '◀'
     }
 
-    // Show/hide floating expand button
+    // Hide floating expand button - not needed in collapsed-minimal mode
+    // since the sidebar is still visible with favicons
     if (this.expandSidebarBtn) {
-      this.expandSidebarBtn.hidden = !this.isSidebarCollapsed
+      this.expandSidebarBtn.hidden = true
     }
 
     // Save state
     localStorage.setItem('branchPanel.sidebarCollapsed', this.isSidebarCollapsed ? 'true' : 'false')
 
-    console.log('[BranchPanel] Sidebar', this.isSidebarCollapsed ? 'collapsed' : 'expanded')
+    console.log('[BranchPanel] Sidebar', this.isSidebarCollapsed ? 'collapsed (favicon-only)' : 'expanded')
   },
 
   restoreSidebarState: function () {
     var saved = localStorage.getItem('branchPanel.sidebarCollapsed')
     if (saved === 'true') {
-      // Restore collapsed state without animation
+      // Restore collapsed-minimal state without animation
       this.isSidebarCollapsed = true
-      this.container.classList.add('collapsed')
+      this.container.classList.add('collapsed-minimal')
 
-      // Initialize already added SIDEBAR_WIDTH margin
-      // We need to REMOVE it since sidebar should be collapsed
+      // Initialize already added SIDEBAR_WIDTH_EXPANDED margin
+      // We need to adjust to collapsed width: 260 -> 48 = -212
       try {
-        webviews.adjustMargin([0, 0, 0, -SIDEBAR_WIDTH])
+        webviews.adjustMargin([0, 0, 0, -(SIDEBAR_WIDTH_EXPANDED - SIDEBAR_WIDTH_COLLAPSED)])
       } catch (e) {
         console.error('[BranchPanel] Failed to adjust margin on restore:', e)
       }
@@ -339,8 +344,9 @@ var branchPanel = {
         this.toggleSidebarBtn.textContent = '▶'
       }
 
+      // Don't show expand button - sidebar is visible in collapsed-minimal mode
       if (this.expandSidebarBtn) {
-        this.expandSidebarBtn.hidden = false
+        this.expandSidebarBtn.hidden = true
       }
     }
   },

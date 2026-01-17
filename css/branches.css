@@ -583,9 +583,10 @@ body.is-ntp #searchbar {
 }
 
 /* =========================================
-   SIDEBAR COLLAPSED STATE
+   SIDEBAR COLLAPSED STATE - Favicon-only mode
    ========================================= */
 
+/* Full collapsed (hidden) - legacy */
 #branch-sidebar.collapsed {
   width: 0;
   min-width: 0;
@@ -600,13 +601,67 @@ body.is-ntp #searchbar {
   transition: opacity 0.1s ease;
 }
 
-#branch-sidebar:not(.collapsed) {
+/* Minimal collapsed - favicon only (48px) */
+#branch-sidebar.collapsed-minimal {
+  width: 48px;
+  min-width: 48px;
+  transition: width 0.2s ease;
+}
+
+/* Hide text content in minimal collapsed mode */
+#branch-sidebar.collapsed-minimal #sidebar-url-bar,
+#branch-sidebar.collapsed-minimal #pinned-section,
+#branch-sidebar.collapsed-minimal .branch-content,
+#branch-sidebar.collapsed-minimal .branch-toggle,
+#branch-sidebar.collapsed-minimal .branch-close-btn,
+#branch-sidebar.collapsed-minimal .branch-source {
+  display: none;
+}
+
+/* Center favicons in collapsed mode */
+#branch-sidebar.collapsed-minimal .branch-item {
+  justify-content: center;
+  padding: 8px;
+  padding-right: 8px;
+  margin: 2px 4px;
+}
+
+#branch-sidebar.collapsed-minimal .branch-favicon {
+  margin: 0;
+}
+
+/* Remove indentation in collapsed mode */
+#branch-sidebar.collapsed-minimal .branch-item[data-depth="0"],
+#branch-sidebar.collapsed-minimal .branch-item[data-depth="1"],
+#branch-sidebar.collapsed-minimal .branch-item[data-depth="2"],
+#branch-sidebar.collapsed-minimal .branch-item[data-depth="3"],
+#branch-sidebar.collapsed-minimal .branch-item[data-depth="4"],
+#branch-sidebar.collapsed-minimal .branch-item[data-depth="5"] {
+  padding-left: 8px;
+}
+
+/* Hide indent guides in collapsed mode */
+#branch-sidebar.collapsed-minimal .branch-item[data-depth]:not([data-depth="0"])::after {
+  display: none;
+}
+
+/* Thinner scrollbar in collapsed mode */
+#branch-sidebar.collapsed-minimal #branch-tree::-webkit-scrollbar {
+  width: 4px;
+}
+
+#branch-sidebar:not(.collapsed):not(.collapsed-minimal) {
   transition: width 0.2s ease;
 }
 
 body:has(#branch-sidebar.collapsed) #searchbar {
   left: 0 !important;
   width: 100% !important;
+}
+
+body:has(#branch-sidebar.collapsed-minimal) #searchbar {
+  left: 48px !important;
+  width: calc(100% - 48px) !important;
 }
 
 /* =========================================
