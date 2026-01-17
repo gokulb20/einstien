@@ -274,62 +274,80 @@ body.is-ntp #searchbar {
 }
 
 /* =========================================
-   BRANCH ITEM - Subtle hover effect
+   BRANCH ITEM - Chrome-style vertical tabs
    ========================================= */
 
 .branch-item {
   display: flex;
   align-items: center;
-  padding: 8px 10px;
+  padding: 6px 12px;
   padding-right: 32px;
   cursor: pointer;
-  border-radius: 8px;
-  margin: 2px 0;
+  border-radius: 20px;
+  margin: 2px 4px;
   position: relative;
-  min-height: 36px;
-  transition:
-    background 0.15s ease,
-    transform 0.1s ease;
+  min-height: 32px;
+  transition: background 0.1s ease;
 }
 
 .branch-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
 }
 
-/* Active branch - subtle left accent */
+/* Active branch - Chrome-style full background */
 .branch-item.active {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.12);
 }
 
-.branch-item.active::before {
+/* Tab group color indicators for root-level tabs */
+.branch-item[data-depth="0"] {
+  position: relative;
+}
+
+.branch-item[data-depth="0"]::before {
   content: "";
   position: absolute;
-  left: 0;
-  top: 8px;
-  bottom: 8px;
-  width: 3px;
-  background: rgba(255, 255, 255, 0.4);
+  left: 4px;
+  top: 6px;
+  bottom: 6px;
+  width: 4px;
   border-radius: 2px;
+  background: var(--group-color, rgba(138, 180, 248, 0.8));
+}
+
+/* 8 distinct group colors cycling */
+.branch-item[data-depth="0"]:nth-of-type(8n+1) { --group-color: rgba(138, 180, 248, 0.8); } /* Blue */
+.branch-item[data-depth="0"]:nth-of-type(8n+2) { --group-color: rgba(129, 201, 149, 0.8); } /* Green */
+.branch-item[data-depth="0"]:nth-of-type(8n+3) { --group-color: rgba(253, 214, 99, 0.8); }  /* Yellow */
+.branch-item[data-depth="0"]:nth-of-type(8n+4) { --group-color: rgba(242, 139, 130, 0.8); } /* Red */
+.branch-item[data-depth="0"]:nth-of-type(8n+5) { --group-color: rgba(215, 174, 251, 0.8); } /* Purple */
+.branch-item[data-depth="0"]:nth-of-type(8n+6) { --group-color: rgba(255, 183, 77, 0.8); }  /* Orange */
+.branch-item[data-depth="0"]:nth-of-type(8n+7) { --group-color: rgba(128, 222, 234, 0.8); } /* Cyan */
+.branch-item[data-depth="0"]:nth-of-type(8n+8) { --group-color: rgba(244, 143, 177, 0.8); } /* Pink */
+
+/* Adjust padding for root items to account for color indicator */
+.branch-item[data-depth="0"] {
+  padding-left: 16px;
 }
 
 /* =========================================
-   CLOSE BUTTON
+   CLOSE BUTTON - Chrome-style rounded
    ========================================= */
 
 .branch-close-btn {
   position: absolute;
   right: 8px;
   top: 50%;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
   border: none;
-  border-radius: 4px;
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 14px;
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 12px;
   cursor: pointer;
   padding: 0;
   line-height: 1;
@@ -346,36 +364,24 @@ body.is-ntp #searchbar {
 }
 
 .branch-close-btn:hover {
-  background: rgba(255, 100, 100, 0.15);
-  color: rgba(255, 150, 150, 1);
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* =========================================
-   INDENTATION - Tree structure
+   INDENTATION - Chrome-style simplified
    ========================================= */
 
-.branch-item[data-depth="0"] { padding-left: 10px; }
-.branch-item[data-depth="1"] { padding-left: 24px; }
-.branch-item[data-depth="2"] { padding-left: 38px; }
-.branch-item[data-depth="3"] { padding-left: 52px; }
-.branch-item[data-depth="4"] { padding-left: 66px; }
-.branch-item[data-depth="5"] { padding-left: 80px; }
+/* Root items have extra padding for color indicator */
+.branch-item[data-depth="0"] { padding-left: 16px; }
+/* Child items use margin-based indentation */
+.branch-item[data-depth="1"] { margin-left: 12px; }
+.branch-item[data-depth="2"] { margin-left: 24px; }
+.branch-item[data-depth="3"] { margin-left: 36px; }
+.branch-item[data-depth="4"] { margin-left: 48px; }
+.branch-item[data-depth="5"] { margin-left: 60px; }
 
-/* Subtle indent guides */
-.branch-item[data-depth]:not([data-depth="0"])::after {
-  content: "";
-  position: absolute;
-  top: 10px;
-  bottom: 10px;
-  width: 1px;
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.branch-item[data-depth="1"]::after { left: 14px; }
-.branch-item[data-depth="2"]::after { left: 28px; }
-.branch-item[data-depth="3"]::after { left: 42px; }
-.branch-item[data-depth="4"]::after { left: 56px; }
-.branch-item[data-depth="5"]::after { left: 70px; }
+/* No indent guides - cleaner Chrome-style look */
 
 /* =========================================
    COLLAPSE TOGGLE
