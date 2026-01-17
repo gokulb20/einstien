@@ -55,6 +55,8 @@ var branchPanel = {
   pinnedSites: [],
   contextMenu: null,
   isNewTabMode: false, // Track if we're creating a new tab vs navigating current
+  breadcrumbUrlInput: null,
+  isBreadcrumbEditMode: false,
 
   initialize: function () {
     this.container = document.getElementById('branch-sidebar')
@@ -73,6 +75,8 @@ var branchPanel = {
     // New tab button (next to URL bar)
     this.newTabBtn = document.getElementById('new-tab-btn')
     this.urlInput = document.getElementById('sidebar-url-input')
+    // Breadcrumb URL input for click-to-edit
+    this.breadcrumbUrlInput = document.getElementById('breadcrumb-url-input')
 
     if (!this.container || !this.treeContainer) {
       console.warn('[BranchPanel] Container elements not found')
@@ -85,6 +89,9 @@ var branchPanel = {
 
     // Setup button handlers
     this.setupButtonHandlers()
+
+    // Setup breadcrumb click-to-edit mode
+    this.setupBreadcrumbEditMode()
 
     // Ensure ROOT branch exists and clean up stale branches
     // Delay to ensure tabs are loaded first
@@ -651,6 +658,125 @@ var branchPanel = {
       title = title.substring(0, 18) + '...'
     }
     return title
+  },
+
+  // =========================================
+  // BREADCRUMB EDIT MODE - Arc-style click-to-edit
+  // =========================================
+
+  setupBreadcrumbEditMode: function () {
+    var self = this
+
+    if (!this.breadcrumbContainer || !this.breadcrumbUrlInput) {
+      console.warn('[BranchPanel] Breadcrumb elements not found, skipping edit mode setup')
+      return
+    }
+
+    // Click on breadcrumb container to enter edit mode
+    this.breadcrumbContainer.addEventListener('click', function (e) {
+      // Don't enter edit mode if clicking a specific breadcrumb item (navigation)
+      // Unless it's the current one
+      if (e.target.classList.contains('breadcrumb-item') && !e.target.classList.contains('current')) {
+        return
+      }
+
+      // Don't enter if already in edit mode and clicking the input
+      if (e.target === self.breadcrumbUrlInput) {
+        return
+      }
+
+      // Enter edit mode when clicking current breadcrumb or empty space
+      self.enterBreadcrumbEditMode()
+    })
+
+    // URL input handlers
+    this.breadcrumbUrlInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        var url = self.breadcrumbUrlInput.value.trim()
+        if (url) {
+          self.navigateCurrentTab(url)
+        }
+        self.exitBreadcrumbEditMode()
+        e.preventDefault()
+      } else if (e.key === 'Escape') {
+        self.exitBreadcrumbEditMode()
+        e.preventDefault()
+      }
+    })
+
+    this.breadcrumbUrlInput.addEventListener('blur', function () {
+      // Small delay to allow click handlers to fire first
+      setTimeout(function () {
+        if (self.isBreadcrumbEditMode) {
+          self.exitBreadcrumbEditMode()
+        }
+      }, 150)
+    })
+  },
+
+  enterBreadcrumbEditMode: function () {
+    if (this.isBreadcrumbEditMode) return
+    if (!this.breadcrumbContainer || !this.breadcrumbUrlInput) return
+
+    this.isBreadcrumbEditMode = true
+    this.breadcrumbContainer.classList.add('edit-mode')
+
+    // Pre-fill with current URL
+    var selectedTab = safeTabs() ? safeTabs().getSelected() : null
+    var currentUrl = ''
+    if (selectedTab) {
+      var tab = safeTabs().get(selectedTab)
+      currentUrl = tab ? tab.url : ''
+      // Don't show internal URLs
+      if (currentUrl && currentUrl.startsWith('useful://')) {
+        currentUrl = ''
+      }
+    }
+
+    this.breadcrumbUrlInput.value = currentUrl
+    this.breadcrumbUrlInput.focus()
+    this.breadcrumbUrlInput.select()
+  },
+
+  exitBreadcrumbEditMode: function () {
+    if (!this.isBreadcrumbEditMode) return
+    if (!this.breadcrumbContainer) return
+
+    this.isBreadcrumbEditMode = false
+    this.breadcrumbContainer.classList.remove('edit-mode')
+
+    if (this.breadcrumbUrlInput) {
+      this.breadcrumbUrlInput.blur()
+    }
+
+    // Return focus to webview
+    var selectedTab = safeTabs() ? safeTabs().getSelected() : null
+    if (selectedTab) {
+      try {
+        webviews.focus()
+      } catch (e) {
+        // Ignore focus errors
+      }
+    }
+  },
+
+  navigateCurrentTab: function (input) {
+    if (!input) return
+
+    var url = input.trim()
+
+    // If it looks like a search query (no dots, not a URL)
+    if (!url.includes('.') && !url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('file://')) {
+      url = 'https://www.google.com/search?q=' + encodeURIComponent(url)
+    } else if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('file://')) {
+      // Add https:// if no protocol specified
+      url = 'https://' + url
+    }
+
+    var selectedTab = safeTabs() ? safeTabs().getSelected() : null
+    if (selectedTab) {
+      webviews.update(selectedTab, url)
+    }
   },
 
   // =========================================

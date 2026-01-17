@@ -580,6 +580,65 @@ body:not(.dark-mode):not(.dark-theme) .breadcrumb-ellipsis {
 }
 
 /* =========================================
+   BREADCRUMB EDIT MODE - Arc-style click-to-edit
+   ========================================= */
+
+/* Hide breadcrumb items when in edit mode */
+#breadcrumb-trail.edit-mode .breadcrumb-item,
+#breadcrumb-trail.edit-mode .breadcrumb-separator,
+#breadcrumb-trail.edit-mode .breadcrumb-ellipsis {
+  display: none;
+}
+
+/* URL input hidden by default */
+#breadcrumb-url-input {
+  display: none;
+  flex: 1;
+  padding: 6px 12px;
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.95);
+  outline: none;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+/* Show input in edit mode */
+#breadcrumb-trail.edit-mode #breadcrumb-url-input {
+  display: block;
+}
+
+#breadcrumb-url-input:focus {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
+}
+
+#breadcrumb-url-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Light mode breadcrumb input */
+body:not(.dark-mode):not(.dark-theme) #breadcrumb-url-input {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.9);
+}
+
+body:not(.dark-mode):not(.dark-theme) #breadcrumb-url-input:focus {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.03);
+}
+
+body:not(.dark-mode):not(.dark-theme) #breadcrumb-url-input::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+/* =========================================
    NAVIGATION POLISH: Tab Creation Animations
    ========================================= */
 
