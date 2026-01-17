@@ -2,6 +2,19 @@
 // Connects Min's tab system to branch state management
 
 var branchState = null
+var branchPanel = null
+
+// Lazy load branchPanel module
+function getBranchPanel () {
+  if (branchPanel) return branchPanel
+  try {
+    branchPanel = require('branches/branchPanel.js')
+    return branchPanel
+  } catch (e) {
+    // May not be available during early initialization
+    return null
+  }
+}
 
 // Lazy load branchState module
 function getBranchState () {
@@ -132,8 +145,13 @@ function setupEventListeners () {
       var tab = task ? task.tabs.get(tabId) : null
       var title = tab ? tab.title : ''
 
+      // Check if this is a breadcrumb navigation (position change, not new entry)
+      var bp = getBranchPanel()
+      var isBreadcrumbNav = bp && bp.isBreadcrumbNavigation && bp.isBreadcrumbNavigation()
+
       // Add to navigation history (shows Home > Google > Search in breadcrumb)
-      await bs.addToHistory(branch.id, value, title)
+      // If breadcrumb navigation, this will be skipped (position already updated)
+      await bs.addToHistory(branch.id, value, title, { isBreadcrumbNav: isBreadcrumbNav })
     } else if (key === 'title') {
       // Update title in branch and in latest history entry
       await bs.update(branch.id, { title: value })

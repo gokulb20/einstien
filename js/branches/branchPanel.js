@@ -430,8 +430,10 @@ var branchPanel = {
       return
     }
 
-    // Get navigation history for this branch (Home > Google > Search)
-    var history = branch.history || []
+    // Get navigation history with current position
+    var historyData = bs.getHistoryWithPosition(branch.id)
+    var history = historyData.history
+    var currentIndex = historyData.currentIndex
 
     // If no history yet, show current page
     if (history.length === 0) {
@@ -442,46 +444,108 @@ var branchPanel = {
       return
     }
 
-    // Show up to 4 history items (truncate if more)
-    var displayHistory = history
-    if (history.length > 4) {
-      displayHistory = history.slice(-4)
+    // Calculate display range - show items around current position
+    // Max 5 visible items for cleaner UI
+    var maxVisible = 5
+    var startIndex = 0
+    var endIndex = history.length - 1
 
-      // Add ellipsis at start
-      var ellipsis = document.createElement('span')
-      ellipsis.className = 'breadcrumb-separator'
-      ellipsis.textContent = '...'
-      this.breadcrumbContainer.appendChild(ellipsis)
+    if (history.length > maxVisible) {
+      // Center around current position with bias toward past
+      var halfWindow = Math.floor(maxVisible / 2)
+      startIndex = Math.max(0, currentIndex - halfWindow)
+      endIndex = Math.min(history.length - 1, startIndex + maxVisible - 1)
+
+      // Adjust if we hit the end
+      if (endIndex === history.length - 1) {
+        startIndex = Math.max(0, endIndex - maxVisible + 1)
+      }
     }
 
     var self = this
-    displayHistory.forEach(function (entry, index) {
-      var isLast = index === displayHistory.length - 1
+
+    // Add ellipsis at start if truncated
+    if (startIndex > 0) {
+      var ellipsis = document.createElement('span')
+      ellipsis.className = 'breadcrumb-ellipsis'
+      ellipsis.textContent = '...'
+      ellipsis.title = 'More history items'
+      this.breadcrumbContainer.appendChild(ellipsis)
+    }
+
+    // Render breadcrumb items
+    for (var i = startIndex; i <= endIndex; i++) {
+      var entry = history[i]
+      var isCurrent = i === currentIndex
+      var isPast = i < currentIndex
+      var isFuture = i > currentIndex
 
       // Breadcrumb item
       var item = document.createElement('span')
-      item.className = 'breadcrumb-item' + (isLast ? ' current' : '')
-      item.textContent = self.getShortTitle(entry.title || entry.url)
+      item.className = 'breadcrumb-item'
+      if (isCurrent) item.className += ' current'
+      if (isPast) item.className += ' past'
+      if (isFuture) item.className += ' future'
 
-      // Click to navigate back in history
-      if (!isLast) {
-        item.setAttribute('data-url', entry.url)
-        item.addEventListener('click', function () {
-          // Navigate back to this URL in the current tab
-          webviews.update(selectedTabId, entry.url)
-        })
+      item.textContent = self.getShortTitle(entry.title || entry.url)
+      item.setAttribute('data-index', i)
+      item.setAttribute('data-url', entry.url)
+
+      // Click to navigate (except current)
+      if (!isCurrent) {
+        (function (clickIndex, url) {
+          item.addEventListener('click', function () {
+            self.navigateToBreadcrumb(branch.id, clickIndex, url, selectedTabId)
+          })
+        })(i, entry.url)
       }
 
       self.breadcrumbContainer.appendChild(item)
 
-      // Add separator (except after last)
-      if (!isLast) {
+      // Add separator (except after last visible)
+      if (i < endIndex) {
         var separator = document.createElement('span')
         separator.className = 'breadcrumb-separator'
         separator.textContent = '›'
         self.breadcrumbContainer.appendChild(separator)
       }
-    })
+    }
+
+    // Add ellipsis at end if truncated
+    if (endIndex < history.length - 1) {
+      var ellipsisEnd = document.createElement('span')
+      ellipsisEnd.className = 'breadcrumb-ellipsis'
+      ellipsisEnd.textContent = '...'
+      ellipsisEnd.title = 'More history items'
+      this.breadcrumbContainer.appendChild(ellipsisEnd)
+    }
+  },
+
+  // Navigate to a breadcrumb position (preserves forward history)
+  navigateToBreadcrumb: async function (branchId, index, url, tabId) {
+    var bs = getBranchState()
+    if (!bs) return
+
+    // Update history index (this preserves forward history)
+    var entry = await bs.navigateToHistoryIndex(branchId, index)
+    if (!entry) return
+
+    // Mark this as a breadcrumb navigation so addToHistory doesn't add a new entry
+    this._isBreadcrumbNavigation = true
+
+    // Navigate to the URL
+    webviews.update(tabId, url)
+
+    // Clear the flag after a short delay
+    var self = this
+    setTimeout(function () {
+      self._isBreadcrumbNavigation = false
+    }, 500)
+  },
+
+  // Check if current navigation is from breadcrumb click
+  isBreadcrumbNavigation: function () {
+    return this._isBreadcrumbNavigation === true
   },
 
   getShortTitle: function (title) {
