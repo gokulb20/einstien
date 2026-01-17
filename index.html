@@ -180,6 +180,18 @@
 
     <div id="overlay"></div>
 
+    <!-- Spotlight overlay (Cmd+T) - Arc-style centered search -->
+    <div id="spotlight-overlay" hidden>
+      <div id="spotlight-container">
+        <input id="spotlight-input" type="text" placeholder="Search or enter URL..." spellcheck="false" autocomplete="off" />
+        <div id="spotlight-hint">
+          <span><kbd>Enter</kbd> New tab</span>
+          <span><kbd>Shift+Enter</kbd> Sibling tab</span>
+          <span><kbd>Esc</kbd> Cancel</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Branch Browser: Floating expand button (shown when sidebar collapsed) -->
     <button id="sidebar-expand-btn" class="floating-expand-btn" hidden>▶</button>
 
