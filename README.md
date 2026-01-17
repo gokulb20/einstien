@@ -1,115 +1,187 @@
-# Min
+# Browser
 
-Min is a fast, minimal browser that protects your privacy. It includes an interface designed to minimize distractions, and features such as:
+**A browser that thinks the way you do.**
 
-- Full-text search for visited pages
-- Ad and tracker blocking
-- Automatic reader view
-- Tasks (tab groups)
-- Bookmark tagging
-- Password manager integration
-- Dark theme
+The ADHD-friendly browser. Open source and free forever.
 
-Download Min from the [releases page](https://github.com/minbrowser/min/releases), or learn more on the [website](https://minbrowser.org/).
+[![Work in Progress](https://img.shields.io/badge/status-work%20in%20progress-yellow)](https://github.com/usefulventures/browser)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-[![Downloads][DownloadsBadge]][DownloadsUrl]
-[![Discord][DiscordBadge]][DiscordUrl]
+---
 
-Min is made possible by these sponsors:
+## What is Browser?
 
-| [<img src="https://avatars.githubusercontent.com/u/6592155?v=4" width="40">](https://github.com/blackgwe) | [<img src="https://avatars.githubusercontent.com/u/49724477?v=4" width="40">](https://github.com/rafel-ioli) |[<img src="https://avatars.githubusercontent.com/u/237596?v=4" width="40">](https://github.com/idoru) |     |
-| ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |--------------------------------------------------------------------------------------------------------------- | --- |
-| [@blackgwe](https://github.com/blackgwe)                                                                            | [@rafel-ioli](https://github.com/rafel-ioli)                                                                        |[@idoru](https://github.com/idoru)                                                                        ||
+Browser is a minimal, tree-based web browser built for minds that wander on purpose. Instead of drowning in 50 tabs or losing your train of thought, Browser keeps your browsing history as a visual tree—so you can see exactly how you got here and easily find your way back.
 
-[Become a sponsor](https://github.com/sponsors/PalmerAL)
+Built by [Useful Ventures](https://usefulventures.co).
+
+## Features
+
+### Branches of thought
+
+Every click creates a branch. Your browsing history becomes a tree, not a list. See how your ideas connect and trace your path through the web.
+
+### Breadcrumb history
+
+Always know exactly how you got to the current page. The path from your starting point is visible at the top of every page—you never lose the thread.
+
+### Pin your favorites
+
+Keep your most-used sites one click away. Pin up to 6 sites to the top of your sidebar and access them instantly from anywhere.
+
+### Absolute minimalism
+
+No clutter. No distractions. Just your content and your path. Everything else gets out of the way.
+
+### And more
+
+- **Ad and tracker blocking** — Built-in content blocking with EasyList and EasyPrivacy
+- **Full-text history search** — Search the actual content of pages you've visited
+- **Automatic reader view** — Distraction-free reading powered by Mozilla Readability
+- **Password manager integration** — Works with Bitwarden, 1Password, and macOS Keychain
+- **Dark theme** — Easy on the eyes, follows system preferences
+- **Userscript support** — Extend functionality with custom scripts
 
 ## Screenshots
 
-<img alt="The search bar, showing information from DuckDuckGo" src="http://minbrowser.org/tour/img/searchbar_duckduckgo_answers.png" width="650"/>
+<img alt="Tree-based navigation with breadcrumb history" src="http://minbrowser.org/tour/img/tasks.png" width="650"/>
 
-<img alt="The Tasks Overlay" src="http://minbrowser.org/tour/img/tasks.png" width="650"/>
+## Who is this for?
 
-<img alt="Reader View" src="https://user-images.githubusercontent.com/10314059/53312382-67ca7d80-387a-11e9-9ccc-88ac592c9b1c.png" width="650"/>
+**ADHD minds** — Your path stays visible. No more losing where you came from or forgetting where you were headed.
+
+**Researchers** — Follow rabbit holes without anxiety. Every branch shows how your ideas connect.
+
+**The curious** — Explore freely. Your way back is always there when you need it.
 
 ## Installing
 
-You can find prebuilt binaries for Min [here](https://github.com/minbrowser/min/releases). Alternatively, skip to the section below for instructions on how to build Min directly from source.
+### Download
 
-### Installation on Linux
+Download the latest release from the [releases page](https://github.com/usefulventures/browser/releases).
 
-- To install the .deb file, use `sudo dpkg -i /path/to/download`
-- To install the RPM build, use `sudo rpm -i /path/to/download --ignoreos`
-- On Arch Linux install from [AUR](https://aur.archlinux.org/packages/min-browser-bin).
-- On Raspberry Pi, you can install Min from [Pi-Apps](https://github.com/Botspot/pi-apps).
+### Linux
 
-## Getting Started
+- **Debian/Ubuntu**: `sudo dpkg -i /path/to/download.deb`
+- **Fedora/RHEL**: `sudo rpm -i /path/to/download.rpm --ignoreos`
+- **AppImage**: Make executable and run directly
 
-* The [wiki](https://github.com/minbrowser/min/wiki) provides an overview of the the features available in Min, a list of available keyboard shortcuts, and answers to some [frequently asked questions](https://github.com/minbrowser/min/wiki/FAQ).
-* Min supports installing userscripts to extend its functionality. See the [userscript documentation](https://github.com/minbrowser/min/wiki/userscripts) for instructions on writing userscripts, as well as a collection of scripts written by the community.
-* If you have questions about using Min, need help getting started with development, or want to talk about what we're working on, join our [Discord server](https://discord.gg/bRpqjJ4).
+### macOS
+
+Download the `.dmg` for your architecture (Intel or Apple Silicon) and drag to Applications.
+
+### Windows
+
+Download and run the installer.
 
 ## Developing
 
-If you want to develop Min:
+Browser is built on [Electron](https://www.electronjs.org/) and uses vanilla JavaScript with Browserify for module bundling.
 
-- Install [Node](https://nodejs.org).
-- Run `npm install` to install dependencies.
-- Start Min in development mode by running `npm run start`.
-- After you make changes, press `alt+ctrl+r` (or `opt+cmd+r` on Mac) to reload the browser UI.
+### Prerequisites
+
+- [Node.js](https://nodejs.org) v14 or higher
+
+### Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/usefulventures/browser.git
+cd browser
+
+# Install dependencies
+npm install
+
+# Start in development mode
+npm run start
+```
+
+After making changes, press `Alt+Ctrl+R` (or `Opt+Cmd+R` on Mac) to reload the browser UI without restarting.
+
+### Project structure
+
+```
+browser/
+├── main/               # Electron main process
+├── js/                 # Renderer process modules
+│   ├── branches/       # Tree navigation system
+│   ├── navbar/         # Top navigation bar & breadcrumbs
+│   ├── searchbar/      # Omnibox and search plugins
+│   ├── places/         # History and full-text search
+│   └── util/           # Utilities and settings
+├── css/                # Stylesheets
+├── pages/              # Internal pages (settings, new tab, etc.)
+├── localization/       # Multi-language support
+└── ext/                # External libraries
+```
 
 ### Building binaries
 
-In order to build Min from source, follow the installation instructions above, then use one of the following commands to create binaries:
+```bash
+# Windows
+npm run buildWindows
 
-- `npm run buildWindows`
-- `npm run buildMacIntel`
-- `npm run buildMacArm`
-- `npm run buildDebian`
-- `npm run buildRaspi` (for 32-bit Raspberry Pi)
-- `npm run buildLinuxArm64` (for 64-bit Raspberry Pi or other ARM Linux)
-- `npm run buildRedhat`
+# macOS (Intel)
+npm run buildMacIntel
 
-Depending on the platform you are building for, you may need to install additional dependencies:
+# macOS (Apple Silicon)
+npm run buildMacArm
 
-- If you are building a macOS package, you'll need to install Xcode and the associated command-line tools. You may also need to set your default SDK to macOS 11.0 or higher, which you can do by running `export SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk`. The exact command will depend on where Xcode is installed and which SDK version you're using.
-- To build on Windows, you'll need to install Visual Studio. Once it's installed, you may also need to run `npm config set msvs_version 2019` (or the appropriate version).
+# Linux (Debian)
+npm run buildDebian
 
-## Contributing to Min
+# Linux (RPM)
+npm run buildRedhat
 
-Thanks for taking the time to contribute to Min!
+# Linux (AppImage)
+npm run buildAppImage
+```
 
-### Getting Help
+**macOS**: Requires Xcode and command-line tools installed.
 
-If you're experiencing a bug or have a suggestion for how to improve Min, please open a [new issue](https://github.com/minbrowser/min/issues/new/choose).
+**Windows**: Requires Visual Studio. Run `npm config set msvs_version 2019` if needed.
 
-### Contributing Code
+## Contributing
 
-- Start by following the development instructions listed above.
-- The wiki has an [overview of Min's architecture](https://github.com/minbrowser/min/wiki/Architecture).
-- Min uses the [Standard](https://github.com/feross/standard) code style; [most editors](https://standardjs.com/#are-there-text-editor-plugins) have plugins available to auto-format your code.
-- If you see something that's missing, or run into any problems, please open an issue!
+We're building this in public and want contributors.
 
-### Contributing Translations
+### Code contributions
 
-#### Adding a new language
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes (we use [Standard](https://standardjs.com/) code style)
+4. Submit a pull request
 
-- Find the language code that goes with your language from [this list](https://source.chromium.org/chromium/chromium/src/+/main:ui/base/l10n/l10n_util.cc;l=68-259) (line 68 - 259).
-- In the `localization/languages` directory, create a new file, and name it "[your language code].json".
-- Open your new file, and copy the contents of the <a href="https://github.com/minbrowser/min/blob/master/localization/languages/en-US.json">localization/languages/en-US.json</a> file into your new file.
-- Change the "identifier" field in the new file to the language code from step 1.
-- Inside the file, replace each English string in the right-hand column with the equivalent translation.
-- (Optional) See your translations live by following the [development instructions](#installing) above. Min will display in the same language as your operating system, so make sure your computer is set to the same language that you're translating.
-- That's it! Make a pull request with your changes.
+### Translations
 
-#### Updating an existing language
+Browser supports 20+ languages. To add or update a translation:
 
-- Find the language file for your language in the `localization/languages` directory.
-- Look through the file for any items that have a value of "null", or that have a comment saying "missing translation".
-- For each of these items, look for the item with the same name in the `en-US.json` file.
-- Translate the value from the English file, replace "null" with your translation, and remove the "missing translation" comment.
-- Make a pull request with the updated file.
+1. Find your language code from [Chromium's list](https://source.chromium.org/chromium/chromium/src/+/main:ui/base/l10n/l10n_util.cc;l=68-259)
+2. Copy `localization/languages/en-US.json` to `[your-language-code].json`
+3. Translate the strings
+4. Submit a pull request
 
-[DiscordBadge]: https://img.shields.io/discord/764269005195968512.svg?label=Discord&logo=discord&logoColor=white
-[DiscordUrl]: https://discord.gg/bRpqjJ4
-[DownloadsBadge]: https://img.shields.io/github/downloads/minbrowser/min/total.svg
-[DownloadsUrl]: https://github.com/minbrowser/min/releases
+## Open source
+
+Browser is **MIT licensed** and free forever. Use it, fork it, make it yours.
+
+| | |
+|---|---|
+| **License** | MIT — No restrictions |
+| **Cost** | Free for individuals |
+| **Hackable** | Built to be extended |
+| **Community** | You shape the roadmap |
+
+## Schools and organizations
+
+Need support, training, or custom features? We'll build it.
+
+**Contact us**: [hello@usefulventures.co](mailto:hello@usefulventures.co)
+
+## Acknowledgments
+
+Browser is built on top of [Min Browser](https://github.com/minbrowser/min), a fast, minimal browser by [@pfroud](https://github.com/pfroud) and contributors. We're grateful for their work in creating a solid, privacy-focused foundation.
+
+---
+
+Built by [Useful Ventures](https://usefulventures.co) • [GitHub](https://github.com/usefulventures/browser) • [Contact](mailto:hello@usefulventures.co)
