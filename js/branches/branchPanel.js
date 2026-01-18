@@ -56,8 +56,6 @@ var branchPanel = {
   pinnedSites: [],
   contextMenu: null,
   isNewTabMode: false, // Track if we're creating a new tab vs navigating current
-  breadcrumbUrlInput: null,
-  isBreadcrumbEditMode: false,
 
   initialize: function () {
     this.container = document.getElementById('branch-sidebar')
@@ -76,9 +74,6 @@ var branchPanel = {
     // New tab button (next to URL bar)
     this.newTabBtn = document.getElementById('new-tab-btn')
     this.urlInput = document.getElementById('sidebar-url-input')
-    // Breadcrumb URL input for click-to-edit
-    this.breadcrumbUrlInput = document.getElementById('breadcrumb-url-input')
-
     if (!this.container || !this.treeContainer) {
       console.warn('[BranchPanel] Container elements not found')
       return
@@ -90,9 +85,6 @@ var branchPanel = {
 
     // Setup button handlers
     this.setupButtonHandlers()
-
-    // Setup breadcrumb click-to-edit mode
-    this.setupBreadcrumbEditMode()
 
     // Ensure ROOT branch exists and clean up stale branches
     // Delay to ensure tabs are loaded first
@@ -216,19 +208,18 @@ var branchPanel = {
       })
     }
 
-    // Bottom toolbar: Grid button (opens task overlay)
-    var gridBtn = document.getElementById('sidebar-grid-btn')
-    if (gridBtn) {
-      console.log('[BranchPanel] Attaching grid button handler')
-      gridBtn.addEventListener('click', function () {
-        console.log('[BranchPanel] Grid button clicked - opening task overlay')
-        try {
-          var taskOverlay = require('taskOverlay/taskOverlay.js')
-          taskOverlay.toggle()
-        } catch (e) {
-          console.error('[BranchPanel] Failed to open task overlay:', e)
-        }
+    // Bottom toolbar: Collapse button (toggles sidebar)
+    var collapseBtn = document.getElementById('sidebar-collapse-btn')
+    console.log('[BranchPanel] Looking for collapse button:', collapseBtn)
+    if (collapseBtn) {
+      console.log('[BranchPanel] Attaching collapse button handler')
+      collapseBtn.addEventListener('click', function (e) {
+        console.log('[BranchPanel] Collapse button clicked - toggling sidebar')
+        e.stopPropagation()
+        self.toggleSidebar()
       })
+    } else {
+      console.warn('[BranchPanel] Collapse button NOT found!')
     }
 
     // Bottom toolbar: New tab button (opens spotlight overlay)
@@ -291,6 +282,14 @@ var branchPanel = {
     // Restore collapsed state from localStorage
     this.restoreSidebarState()
 
+    // Breadcrumb right-click context menu for Copy URL
+    if (this.breadcrumbContainer) {
+      this.breadcrumbContainer.addEventListener('contextmenu', function (e) {
+        e.preventDefault()
+        self.showBreadcrumbContextMenu(e.clientX, e.clientY)
+      })
+    }
+
     // Close context menu on outside click
     document.addEventListener('click', function (e) {
       if (self.contextMenu && !self.contextMenu.contains(e.target)) {
@@ -350,6 +349,17 @@ var branchPanel = {
       this.toggleSidebarBtn.textContent = this.isSidebarCollapsed ? '▶' : '◀'
     }
 
+    // Update collapse button icon (swap chevron direction)
+    var collapseBtn = document.getElementById('sidebar-collapse-btn')
+    if (collapseBtn) {
+      var chevron = collapseBtn.querySelector('polyline')
+      if (chevron) {
+        // Swap chevron direction: left (collapse) vs right (expand)
+        chevron.setAttribute('points', this.isSidebarCollapsed ? '11,8 14,12 11,16' : '14,8 11,12 14,16')
+        collapseBtn.title = this.isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'
+      }
+    }
+
     // Hide floating expand button - not needed in collapsed-minimal mode
     // since the sidebar is still visible with favicons
     if (this.expandSidebarBtn) {
@@ -379,6 +389,16 @@ var branchPanel = {
 
       if (this.toggleSidebarBtn) {
         this.toggleSidebarBtn.textContent = '▶'
+      }
+
+      // Update collapse button to show expand icon
+      var collapseBtn = document.getElementById('sidebar-collapse-btn')
+      if (collapseBtn) {
+        var chevron = collapseBtn.querySelector('polyline')
+        if (chevron) {
+          chevron.setAttribute('points', '11,8 14,12 11,16')
+          collapseBtn.title = 'Expand sidebar'
+        }
       }
 
       // Don't show expand button - sidebar is visible in collapsed-minimal mode
@@ -694,125 +714,6 @@ var branchPanel = {
       title = title.substring(0, 18) + '...'
     }
     return title
-  },
-
-  // =========================================
-  // BREADCRUMB EDIT MODE - Arc-style click-to-edit
-  // =========================================
-
-  setupBreadcrumbEditMode: function () {
-    var self = this
-
-    if (!this.breadcrumbContainer || !this.breadcrumbUrlInput) {
-      console.warn('[BranchPanel] Breadcrumb elements not found, skipping edit mode setup')
-      return
-    }
-
-    // Click on breadcrumb container to enter edit mode
-    this.breadcrumbContainer.addEventListener('click', function (e) {
-      // Don't enter edit mode if clicking a specific breadcrumb item (navigation)
-      // Unless it's the current one
-      if (e.target.classList.contains('breadcrumb-item') && !e.target.classList.contains('current')) {
-        return
-      }
-
-      // Don't enter if already in edit mode and clicking the input
-      if (e.target === self.breadcrumbUrlInput) {
-        return
-      }
-
-      // Enter edit mode when clicking current breadcrumb or empty space
-      self.enterBreadcrumbEditMode()
-    })
-
-    // URL input handlers
-    this.breadcrumbUrlInput.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
-        var url = self.breadcrumbUrlInput.value.trim()
-        if (url) {
-          self.navigateCurrentTab(url)
-        }
-        self.exitBreadcrumbEditMode()
-        e.preventDefault()
-      } else if (e.key === 'Escape') {
-        self.exitBreadcrumbEditMode()
-        e.preventDefault()
-      }
-    })
-
-    this.breadcrumbUrlInput.addEventListener('blur', function () {
-      // Small delay to allow click handlers to fire first
-      setTimeout(function () {
-        if (self.isBreadcrumbEditMode) {
-          self.exitBreadcrumbEditMode()
-        }
-      }, 150)
-    })
-  },
-
-  enterBreadcrumbEditMode: function () {
-    if (this.isBreadcrumbEditMode) return
-    if (!this.breadcrumbContainer || !this.breadcrumbUrlInput) return
-
-    this.isBreadcrumbEditMode = true
-    this.breadcrumbContainer.classList.add('edit-mode')
-
-    // Pre-fill with current URL
-    var selectedTab = safeTabs() ? safeTabs().getSelected() : null
-    var currentUrl = ''
-    if (selectedTab) {
-      var tab = safeTabs().get(selectedTab)
-      currentUrl = tab ? tab.url : ''
-      // Don't show internal URLs
-      if (currentUrl && currentUrl.startsWith('useful://')) {
-        currentUrl = ''
-      }
-    }
-
-    this.breadcrumbUrlInput.value = currentUrl
-    this.breadcrumbUrlInput.focus()
-    this.breadcrumbUrlInput.select()
-  },
-
-  exitBreadcrumbEditMode: function () {
-    if (!this.isBreadcrumbEditMode) return
-    if (!this.breadcrumbContainer) return
-
-    this.isBreadcrumbEditMode = false
-    this.breadcrumbContainer.classList.remove('edit-mode')
-
-    if (this.breadcrumbUrlInput) {
-      this.breadcrumbUrlInput.blur()
-    }
-
-    // Return focus to webview
-    var selectedTab = safeTabs() ? safeTabs().getSelected() : null
-    if (selectedTab) {
-      try {
-        webviews.focus()
-      } catch (e) {
-        // Ignore focus errors
-      }
-    }
-  },
-
-  navigateCurrentTab: function (input) {
-    if (!input) return
-
-    var url = input.trim()
-
-    // If it looks like a search query (no dots, not a URL)
-    if (!url.includes('.') && !url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('file://')) {
-      url = 'https://www.google.com/search?q=' + encodeURIComponent(url)
-    } else if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('file://')) {
-      // Add https:// if no protocol specified
-      url = 'https://' + url
-    }
-
-    var selectedTab = safeTabs() ? safeTabs().getSelected() : null
-    if (selectedTab) {
-      webviews.update(selectedTab, url)
-    }
   },
 
   // =========================================
@@ -1257,6 +1158,60 @@ var branchPanel = {
     menu.style.top = y + 'px'
     document.body.appendChild(menu)
     this.contextMenu = menu
+  },
+
+  showBreadcrumbContextMenu: function (x, y) {
+    this.closeContextMenu()
+
+    var self = this
+
+    // Get current tab URL
+    var selectedTab = safeTabs() ? safeTabs().getSelected() : null
+    var currentUrl = ''
+    if (selectedTab) {
+      var tab = safeTabs().get(selectedTab)
+      currentUrl = tab ? tab.url : ''
+    }
+
+    // Don't show menu if no URL
+    if (!currentUrl || currentUrl.startsWith('useful://')) {
+      return
+    }
+
+    var menu = document.createElement('div')
+    menu.className = 'branch-context-menu'
+
+    // Copy URL option - using safe DOM methods
+    var copyItem = document.createElement('div')
+    copyItem.className = 'branch-context-menu-item'
+    var copyIcon = document.createElement('i')
+    copyIcon.className = 'i carbon:copy'
+    copyItem.appendChild(copyIcon)
+    copyItem.appendChild(document.createTextNode(' Copy URL'))
+    copyItem.addEventListener('click', function () {
+      navigator.clipboard.writeText(currentUrl).then(function () {
+        console.log('[BranchPanel] URL copied to clipboard:', currentUrl)
+      }).catch(function (err) {
+        console.error('[BranchPanel] Failed to copy URL:', err)
+      })
+      self.closeContextMenu()
+    })
+    menu.appendChild(copyItem)
+
+    // Position and show
+    menu.style.left = x + 'px'
+    menu.style.top = y + 'px'
+    document.body.appendChild(menu)
+    this.contextMenu = menu
+
+    // Adjust if off screen
+    var rect = menu.getBoundingClientRect()
+    if (rect.right > window.innerWidth) {
+      menu.style.left = (x - rect.width) + 'px'
+    }
+    if (rect.bottom > window.innerHeight) {
+      menu.style.top = (y - rect.height) + 'px'
+    }
   },
 
   closeContextMenu: function () {

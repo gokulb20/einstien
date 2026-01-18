@@ -41,75 +41,6 @@ body.is-ntp #searchbar {
 }
 
 /* =========================================
-   URL/SEARCH BAR WITH NEW TAB BUTTON
-   ========================================= */
-
-#sidebar-url-bar {
-  padding: 12px 12px 8px 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-#sidebar-url-input {
-  flex: 1;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 13px;
-  font-family: inherit;
-  outline: none;
-  box-sizing: border-box;
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-#sidebar-url-input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
-}
-
-#sidebar-url-input:focus {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
-}
-
-/* New Tab Button - Subtle + sign */
-.new-tab-button {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 20px;
-  font-weight: 300;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition:
-    background 0.15s ease,
-    color 0.15s ease,
-    transform 0.15s ease;
-}
-
-.new-tab-button:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.new-tab-button:active {
-  transform: scale(0.95);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-/* =========================================
    PINNED SITES GRID - Adaptive Layout
    ========================================= */
 
@@ -615,7 +546,6 @@ body.is-ntp #searchbar {
 }
 
 /* Hide text content in minimal collapsed mode */
-#branch-sidebar.collapsed-minimal #sidebar-url-bar,
 #branch-sidebar.collapsed-minimal #pinned-section,
 #branch-sidebar.collapsed-minimal .branch-content,
 #branch-sidebar.collapsed-minimal .branch-toggle,
@@ -813,11 +743,11 @@ body:has(#branch-sidebar.collapsed-minimal) #searchbar {
   height: 18px;
 }
 
-/* Collapsed mode: center the + button, hide grid */
+/* Collapsed mode: center collapse button, hide new tab button */
 #branch-sidebar.collapsed-minimal #sidebar-bottom-toolbar {
   justify-content: center;
 }
 
-#branch-sidebar.collapsed-minimal #sidebar-grid-btn {
+#branch-sidebar.collapsed-minimal #sidebar-new-tab-btn {
   display: none;
 }
