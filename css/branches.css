@@ -41,11 +41,12 @@ body.is-ntp #searchbar {
 }
 
 /* =========================================
-   PINNED SITES GRID - Adaptive Layout
+   FAVORITES - Horizontal Scroll Row (Expanded)
    ========================================= */
 
 #pinned-section {
-  padding: 0 12px 12px 12px;
+  padding: 8px 8px 8px 8px;
+  flex-shrink: 0;
 }
 
 #pinned-section:empty,
@@ -54,124 +55,65 @@ body.is-ntp #searchbar {
 }
 
 #pinned-sites {
-  display: grid;
-  gap: 8px;
-  justify-content: center;
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }
 
-/* Dynamic grid based on icon count */
-#pinned-sites[data-count="1"] {
-  grid-template-columns: 1fr;
-  max-width: 80px;
-  margin: 0 auto;
+#pinned-sites::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
-#pinned-sites[data-count="2"] {
-  grid-template-columns: repeat(2, 1fr);
-  max-width: 120px;
-  margin: 0 auto;
-}
-
-#pinned-sites[data-count="3"] {
-  grid-template-columns: repeat(3, 1fr);
-  max-width: 160px;
-  margin: 0 auto;
-}
-
-#pinned-sites[data-count="4"],
-#pinned-sites[data-count="5"],
-#pinned-sites[data-count="6"] {
-  grid-template-columns: repeat(3, 1fr);
-  max-width: 160px;
-  margin: 0 auto;
-}
-
-/* Pinned Icon Item */
+/* Pinned Icon Item - consistent size */
 .pinned-icon-item {
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  border-radius: 12px;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  padding: 6px;
   transition:
     transform 0.15s ease,
     background 0.15s ease;
 }
 
 .pinned-icon-item:hover {
-  background: rgba(255, 255, 255, 0.06);
-  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.08);
+  transform: scale(1.08);
 }
 
 .pinned-icon-item:active {
   transform: scale(0.95);
 }
 
-/* Single icon - larger size */
-#pinned-sites[data-count="1"] .pinned-icon-item {
-  width: 64px;
-  height: 64px;
-  padding: 12px;
-}
-
-#pinned-sites[data-count="1"] .pinned-icon-item img,
-#pinned-sites[data-count="1"] .pinned-icon-item .pinned-fallback {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-}
-
-/* 2-3 icons - medium size */
-#pinned-sites[data-count="2"] .pinned-icon-item,
-#pinned-sites[data-count="3"] .pinned-icon-item {
-  width: 48px;
-  height: 48px;
-  padding: 8px;
-}
-
-#pinned-sites[data-count="2"] .pinned-icon-item img,
-#pinned-sites[data-count="2"] .pinned-icon-item .pinned-fallback,
-#pinned-sites[data-count="3"] .pinned-icon-item img,
-#pinned-sites[data-count="3"] .pinned-icon-item .pinned-fallback {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-}
-
-/* 4-6 icons - smaller size */
-#pinned-sites[data-count="4"] .pinned-icon-item,
-#pinned-sites[data-count="5"] .pinned-icon-item,
-#pinned-sites[data-count="6"] .pinned-icon-item {
-  width: 44px;
-  height: 44px;
-  padding: 6px;
-}
-
-#pinned-sites[data-count="4"] .pinned-icon-item img,
-#pinned-sites[data-count="4"] .pinned-icon-item .pinned-fallback,
-#pinned-sites[data-count="5"] .pinned-icon-item img,
-#pinned-sites[data-count="5"] .pinned-icon-item .pinned-fallback,
-#pinned-sites[data-count="6"] .pinned-icon-item img,
-#pinned-sites[data-count="6"] .pinned-icon-item .pinned-fallback {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-}
-
 .pinned-icon-item img {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
   object-fit: cover;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .pinned-fallback {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
   color: rgba(255, 255, 255, 0.5);
   font-weight: 500;
-  font-size: 14px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-size: 11px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 /* =========================================
@@ -520,7 +462,7 @@ body.is-ntp #searchbar {
 }
 
 /* =========================================
-   SIDEBAR COLLAPSED STATE - Favicon-only mode
+   SIDEBAR COLLAPSED STATE - Favorites-only mode
    ========================================= */
 
 /* Full collapsed (hidden) - legacy */
@@ -538,52 +480,71 @@ body.is-ntp #searchbar {
   transition: opacity 0.1s ease;
 }
 
-/* Minimal collapsed - favicon only (48px) */
+/* Minimal collapsed - favorites only (48px) */
 #branch-sidebar.collapsed-minimal {
   width: 48px;
   min-width: 48px;
   transition: width 0.2s ease;
 }
 
-/* Hide text content in minimal collapsed mode */
-#branch-sidebar.collapsed-minimal #pinned-section,
-#branch-sidebar.collapsed-minimal .branch-content,
-#branch-sidebar.collapsed-minimal .branch-toggle,
-#branch-sidebar.collapsed-minimal .branch-close-btn,
-#branch-sidebar.collapsed-minimal .branch-source {
+/* Hide tab tree in collapsed mode - show only favorites */
+#branch-sidebar.collapsed-minimal #branches-section {
   display: none;
 }
 
-/* Center favicons in collapsed mode */
-#branch-sidebar.collapsed-minimal .branch-item {
-  justify-content: center;
-  padding: 8px;
-  padding-right: 8px;
-  margin: 2px 4px;
+/* Show favorites section as vertical scrollable list */
+#branch-sidebar.collapsed-minimal #pinned-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 8px 4px;
 }
 
-#branch-sidebar.collapsed-minimal .branch-favicon {
-  margin: 0;
+#branch-sidebar.collapsed-minimal #pinned-sites {
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  gap: 4px;
+  padding: 0;
+  scrollbar-width: none;
 }
 
-/* Remove indentation in collapsed mode */
-#branch-sidebar.collapsed-minimal .branch-item[data-depth="0"],
-#branch-sidebar.collapsed-minimal .branch-item[data-depth="1"],
-#branch-sidebar.collapsed-minimal .branch-item[data-depth="2"],
-#branch-sidebar.collapsed-minimal .branch-item[data-depth="3"],
-#branch-sidebar.collapsed-minimal .branch-item[data-depth="4"],
-#branch-sidebar.collapsed-minimal .branch-item[data-depth="5"] {
-  padding-left: 8px;
-}
-
-/* Hide indent guides in collapsed mode */
-#branch-sidebar.collapsed-minimal .branch-item[data-depth]:not([data-depth="0"])::after {
-  display: none;
-}
-
-/* Thinner scrollbar in collapsed mode */
-#branch-sidebar.collapsed-minimal #branch-tree::-webkit-scrollbar {
+#branch-sidebar.collapsed-minimal #pinned-sites::-webkit-scrollbar {
   width: 4px;
+}
+
+#branch-sidebar.collapsed-minimal #pinned-sites::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#branch-sidebar.collapsed-minimal #pinned-sites::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 2px;
+}
+
+#branch-sidebar.collapsed-minimal #pinned-sites:hover::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Center and size favorites in collapsed mode */
+#branch-sidebar.collapsed-minimal .pinned-icon-item {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  margin: 0 auto;
+}
+
+#branch-sidebar.collapsed-minimal .pinned-icon-item img,
+#branch-sidebar.collapsed-minimal .pinned-fallback {
+  width: 28px;
+  height: 28px;
+}
+
+/* Remove color bars from tabs in collapsed mode */
+#branch-sidebar.collapsed-minimal .branch-item[data-depth="0"]::before {
+  display: none;
 }
 
 #branch-sidebar:not(.collapsed):not(.collapsed-minimal) {

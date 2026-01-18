@@ -34,7 +34,7 @@ console.log('[BranchPanel] browserUI.closeTab:', typeof browserUI.closeTab)
 var SIDEBAR_WIDTH_EXPANDED = 260
 var SIDEBAR_WIDTH_COLLAPSED = 48
 
-var MAX_PINNED_SITES = 6
+var MAX_PINNED_SITES = Infinity
 
 var branchPanel = {
   container: null,
@@ -728,11 +728,11 @@ var branchPanel = {
       this.pinnedContainer.removeChild(this.pinnedContainer.firstChild)
     }
 
-    // Limit to max 6 pinned sites
-    var sitesToRender = this.pinnedSites.slice(0, MAX_PINNED_SITES)
+    // Render all pinned sites (no limit)
+    var sitesToRender = this.pinnedSites
     var count = sitesToRender.length
 
-    // Set data-count attribute for CSS grid styling
+    // Set data-count attribute for CSS styling
     this.pinnedContainer.setAttribute('data-count', count)
 
     if (count === 0) {
@@ -788,12 +788,6 @@ var branchPanel = {
   },
 
   pinBranch: function (branch) {
-    // Check if already at max capacity
-    if (this.pinnedSites.length >= MAX_PINNED_SITES) {
-      console.log('[BranchPanel] Cannot pin - max ' + MAX_PINNED_SITES + ' sites reached')
-      return
-    }
-
     // Add to pinned sites if not already pinned
     var exists = this.pinnedSites.some(function (site) {
       return site.url === branch.url
@@ -806,6 +800,7 @@ var branchPanel = {
       })
       this.savePinnedSites()
       this.renderPinnedSites()
+      console.log('[BranchPanel] Pinned site:', branch.url)
     }
   },
 
@@ -1063,11 +1058,10 @@ var branchPanel = {
     var menu = document.createElement('div')
     menu.className = 'branch-context-menu'
 
-    // Check if already pinned or at max capacity
+    // Check if already pinned
     var isAlreadyPinned = this.pinnedSites.some(function (site) {
       return site.url === branch.url
     })
-    var atMaxCapacity = this.pinnedSites.length >= MAX_PINNED_SITES
 
     // Pin option
     var pinItem = document.createElement('div')
@@ -1076,12 +1070,8 @@ var branchPanel = {
       pinItem.innerHTML = '<i class="i carbon:pin-filled"></i> Already Pinned'
       pinItem.style.opacity = '0.5'
       pinItem.style.cursor = 'default'
-    } else if (atMaxCapacity) {
-      pinItem.innerHTML = '<i class="i carbon:pin"></i> Max Pins Reached'
-      pinItem.style.opacity = '0.5'
-      pinItem.style.cursor = 'default'
     } else {
-      pinItem.innerHTML = '<i class="i carbon:pin"></i> Pin to Sidebar'
+      pinItem.innerHTML = '<i class="i carbon:pin"></i> Pin to Favorites'
       pinItem.addEventListener('click', function () {
         self.pinBranch(branch)
         self.closeContextMenu()
