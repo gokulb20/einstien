@@ -8,6 +8,7 @@ var urlParser = require('util/urlParser.js')
 var keyMapModule = require('util/keyMap.js')
 var settings = require('util/settings/settings.js')
 var branchPanel = require('branches/branchPanel.js')
+var spotlightOverlay = require('spotlight/spotlightOverlay.js')
 
 var keyMap = keyMapModule.userKeyMap(settings.get('keyMap'))
 
@@ -29,15 +30,15 @@ const defaultKeybindings = {
         return
       }
 
-      // Focus sidebar URL input - tab is created when user presses Enter
-      branchPanel.focusUrlInput()
+      // Show spotlight overlay for new tab creation
+      spotlightOverlay.show()
     })
 
     // addBackgroundTab shortcut removed - use Cmd+T for new tabs
 
     // Shift+Alt+T / Shift+Option+T - Create a sibling tab (same branch level)
     // For branch-based navigation: creates a tab at the same level, not as a child
-    // Focus sidebar URL input - tab is created when user presses Enter
+    // Note: In spotlight, user can also hold Shift+Enter for sibling tab
     keybindings.defineShortcut('addSiblingTab', function () {
       if (modalMode.enabled()) {
         return
@@ -48,9 +49,8 @@ const defaultKeybindings = {
         return
       }
 
-      // Focus sidebar URL input - tab is created when user presses Enter
-      // Note: sibling tab behavior (same branch level) handled in branchPanel
-      branchPanel.focusUrlInput()
+      // Show spotlight overlay - sibling tab can be created with Shift+Enter
+      spotlightOverlay.show()
     })
 
     keybindings.defineShortcut('addPrivateTab', function () {

@@ -1,0 +1,113 @@
+/* Spotlight Overlay - Arc-style centered search */
+/* Opens with Cmd+T for quick tab creation */
+
+#spotlight-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 20vh;
+  opacity: 1;
+  transition: opacity 0.15s ease;
+}
+
+#spotlight-overlay[hidden] {
+  display: flex !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#spotlight-container {
+  width: 560px;
+  max-width: 90vw;
+  background: rgba(30, 30, 35, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  transform: translateY(0) scale(1);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+#spotlight-overlay[hidden] #spotlight-container {
+  transform: translateY(-20px) scale(0.98);
+}
+
+#spotlight-input {
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 18px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.95);
+  outline: none;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  box-sizing: border-box;
+}
+
+#spotlight-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+#spotlight-hint {
+  padding: 10px 20px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  gap: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+}
+
+#spotlight-hint kbd {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 11px;
+}
+
+/* Light mode support */
+body:not(.dark-mode):not(.dark-theme) #spotlight-overlay {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+body:not(.dark-mode):not(.dark-theme) #spotlight-container {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+body:not(.dark-mode):not(.dark-theme) #spotlight-input {
+  color: rgba(0, 0, 0, 0.9);
+}
+
+body:not(.dark-mode):not(.dark-theme) #spotlight-input::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+body:not(.dark-mode):not(.dark-theme) #spotlight-hint {
+  color: rgba(0, 0, 0, 0.5);
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+
+body:not(.dark-mode):not(.dark-theme) #spotlight-hint kbd {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  #spotlight-overlay,
+  #spotlight-container {
+    transition: none;
+  }
+}

@@ -31,7 +31,8 @@ console.log('[BranchPanel] browserUI.addTab:', typeof browserUI.addTab)
 console.log('[BranchPanel] browserUI.switchToTab:', typeof browserUI.switchToTab)
 console.log('[BranchPanel] browserUI.closeTab:', typeof browserUI.closeTab)
 
-var SIDEBAR_WIDTH = 260
+var SIDEBAR_WIDTH_EXPANDED = 260
+var SIDEBAR_WIDTH_COLLAPSED = 48
 
 var MAX_PINNED_SITES = 6
 
@@ -73,7 +74,6 @@ var branchPanel = {
     // New tab button (next to URL bar)
     this.newTabBtn = document.getElementById('new-tab-btn')
     this.urlInput = document.getElementById('sidebar-url-input')
-
     if (!this.container || !this.treeContainer) {
       console.warn('[BranchPanel] Container elements not found')
       return
@@ -208,6 +208,35 @@ var branchPanel = {
       })
     }
 
+    // Bottom toolbar: Collapse button (toggles sidebar)
+    var collapseBtn = document.getElementById('sidebar-collapse-btn')
+    console.log('[BranchPanel] Looking for collapse button:', collapseBtn)
+    if (collapseBtn) {
+      console.log('[BranchPanel] Attaching collapse button handler')
+      collapseBtn.addEventListener('click', function (e) {
+        console.log('[BranchPanel] Collapse button clicked - toggling sidebar')
+        e.stopPropagation()
+        self.toggleSidebar()
+      })
+    } else {
+      console.warn('[BranchPanel] Collapse button NOT found!')
+    }
+
+    // Bottom toolbar: New tab button (opens spotlight overlay)
+    var newTabToolbarBtn = document.getElementById('sidebar-new-tab-btn')
+    if (newTabToolbarBtn) {
+      console.log('[BranchPanel] Attaching new tab toolbar button handler')
+      newTabToolbarBtn.addEventListener('click', function () {
+        console.log('[BranchPanel] New tab toolbar button clicked - opening spotlight')
+        try {
+          var spotlightOverlay = require('spotlight/spotlightOverlay.js')
+          spotlightOverlay.show()
+        } catch (e) {
+          console.error('[BranchPanel] Failed to open spotlight:', e)
+        }
+      })
+    }
+
     // URL Input: Navigate on Enter key, cancel on Escape
     if (this.urlInput) {
       console.log('[BranchPanel] Attaching URL input handler')
@@ -253,6 +282,14 @@ var branchPanel = {
     // Restore collapsed state from localStorage
     this.restoreSidebarState()
 
+    // Breadcrumb right-click context menu for Copy URL
+    if (this.breadcrumbContainer) {
+      this.breadcrumbContainer.addEventListener('contextmenu', function (e) {
+        e.preventDefault()
+        self.showBreadcrumbContextMenu(e.clientX, e.clientY)
+      })
+    }
+
     // Close context menu on outside click
     document.addEventListener('click', function (e) {
       if (self.contextMenu && !self.contextMenu.contains(e.target)) {
@@ -284,20 +321,23 @@ var branchPanel = {
   },
 
   toggleSidebar: function () {
-    var wasCollapsed = this.isSidebarCollapsed
     this.isSidebarCollapsed = !this.isSidebarCollapsed
 
-    // Update sidebar class
+    // Update sidebar class - toggle between expanded and collapsed-minimal (favicon-only)
     if (this.isSidebarCollapsed) {
-      this.container.classList.add('collapsed')
+      this.container.classList.remove('collapsed')
+      this.container.classList.add('collapsed-minimal')
     } else {
+      this.container.classList.remove('collapsed-minimal')
       this.container.classList.remove('collapsed')
     }
 
     // Adjust webview margin - adjustMargin is ADDITIVE, use difference!
-    // Collapsing: remove sidebar width (-260)
-    // Expanding: add sidebar width (+260)
-    var marginDelta = this.isSidebarCollapsed ? -SIDEBAR_WIDTH : SIDEBAR_WIDTH
+    // Collapsing: 260 -> 48 = -212
+    // Expanding: 48 -> 260 = +212
+    var marginDelta = this.isSidebarCollapsed
+      ? -(SIDEBAR_WIDTH_EXPANDED - SIDEBAR_WIDTH_COLLAPSED)
+      : (SIDEBAR_WIDTH_EXPANDED - SIDEBAR_WIDTH_COLLAPSED)
     try {
       webviews.adjustMargin([0, 0, 0, marginDelta])
     } catch (e) {
@@ -309,28 +349,40 @@ var branchPanel = {
       this.toggleSidebarBtn.textContent = this.isSidebarCollapsed ? '▶' : '◀'
     }
 
-    // Show/hide floating expand button
+    // Update collapse button icon (swap chevron direction)
+    var collapseBtn = document.getElementById('sidebar-collapse-btn')
+    if (collapseBtn) {
+      var chevron = collapseBtn.querySelector('polyline')
+      if (chevron) {
+        // Swap chevron direction: left (collapse) vs right (expand)
+        chevron.setAttribute('points', this.isSidebarCollapsed ? '11,8 14,12 11,16' : '14,8 11,12 14,16')
+        collapseBtn.title = this.isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'
+      }
+    }
+
+    // Hide floating expand button - not needed in collapsed-minimal mode
+    // since the sidebar is still visible with favicons
     if (this.expandSidebarBtn) {
-      this.expandSidebarBtn.hidden = !this.isSidebarCollapsed
+      this.expandSidebarBtn.hidden = true
     }
 
     // Save state
     localStorage.setItem('branchPanel.sidebarCollapsed', this.isSidebarCollapsed ? 'true' : 'false')
 
-    console.log('[BranchPanel] Sidebar', this.isSidebarCollapsed ? 'collapsed' : 'expanded')
+    console.log('[BranchPanel] Sidebar', this.isSidebarCollapsed ? 'collapsed (favicon-only)' : 'expanded')
   },
 
   restoreSidebarState: function () {
     var saved = localStorage.getItem('branchPanel.sidebarCollapsed')
     if (saved === 'true') {
-      // Restore collapsed state without animation
+      // Restore collapsed-minimal state without animation
       this.isSidebarCollapsed = true
-      this.container.classList.add('collapsed')
+      this.container.classList.add('collapsed-minimal')
 
-      // Initialize already added SIDEBAR_WIDTH margin
-      // We need to REMOVE it since sidebar should be collapsed
+      // Initialize already added SIDEBAR_WIDTH_EXPANDED margin
+      // We need to adjust to collapsed width: 260 -> 48 = -212
       try {
-        webviews.adjustMargin([0, 0, 0, -SIDEBAR_WIDTH])
+        webviews.adjustMargin([0, 0, 0, -(SIDEBAR_WIDTH_EXPANDED - SIDEBAR_WIDTH_COLLAPSED)])
       } catch (e) {
         console.error('[BranchPanel] Failed to adjust margin on restore:', e)
       }
@@ -339,8 +391,19 @@ var branchPanel = {
         this.toggleSidebarBtn.textContent = '▶'
       }
 
+      // Update collapse button to show expand icon
+      var collapseBtn = document.getElementById('sidebar-collapse-btn')
+      if (collapseBtn) {
+        var chevron = collapseBtn.querySelector('polyline')
+        if (chevron) {
+          chevron.setAttribute('points', '11,8 14,12 11,16')
+          collapseBtn.title = 'Expand sidebar'
+        }
+      }
+
+      // Don't show expand button - sidebar is visible in collapsed-minimal mode
       if (this.expandSidebarBtn) {
-        this.expandSidebarBtn.hidden = false
+        this.expandSidebarBtn.hidden = true
       }
     }
   },
@@ -1095,6 +1158,60 @@ var branchPanel = {
     menu.style.top = y + 'px'
     document.body.appendChild(menu)
     this.contextMenu = menu
+  },
+
+  showBreadcrumbContextMenu: function (x, y) {
+    this.closeContextMenu()
+
+    var self = this
+
+    // Get current tab URL
+    var selectedTab = safeTabs() ? safeTabs().getSelected() : null
+    var currentUrl = ''
+    if (selectedTab) {
+      var tab = safeTabs().get(selectedTab)
+      currentUrl = tab ? tab.url : ''
+    }
+
+    // Don't show menu if no URL
+    if (!currentUrl || currentUrl.startsWith('useful://')) {
+      return
+    }
+
+    var menu = document.createElement('div')
+    menu.className = 'branch-context-menu'
+
+    // Copy URL option - using safe DOM methods
+    var copyItem = document.createElement('div')
+    copyItem.className = 'branch-context-menu-item'
+    var copyIcon = document.createElement('i')
+    copyIcon.className = 'i carbon:copy'
+    copyItem.appendChild(copyIcon)
+    copyItem.appendChild(document.createTextNode(' Copy URL'))
+    copyItem.addEventListener('click', function () {
+      navigator.clipboard.writeText(currentUrl).then(function () {
+        console.log('[BranchPanel] URL copied to clipboard:', currentUrl)
+      }).catch(function (err) {
+        console.error('[BranchPanel] Failed to copy URL:', err)
+      })
+      self.closeContextMenu()
+    })
+    menu.appendChild(copyItem)
+
+    // Position and show
+    menu.style.left = x + 'px'
+    menu.style.top = y + 'px'
+    document.body.appendChild(menu)
+    this.contextMenu = menu
+
+    // Adjust if off screen
+    var rect = menu.getBoundingClientRect()
+    if (rect.right > window.innerWidth) {
+      menu.style.left = (x - rect.width) + 'px'
+    }
+    if (rect.bottom > window.innerHeight) {
+      menu.style.top = (y - rect.height) + 'px'
+    }
   },
 
   closeContextMenu: function () {

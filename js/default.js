@@ -165,6 +165,7 @@ require('util/theme.js').initialize()
 require('userscripts.js').initialize()
 require('statistics.js').initialize()
 require('taskOverlay/taskOverlay.js').initialize()
+require('spotlight/spotlightOverlay.js').initialize()
 require('sessionRestore.js').initialize()
 
 // Branch Browser: Disable non-essential modules for MVP
