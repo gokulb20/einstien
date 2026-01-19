@@ -728,6 +728,12 @@ var branchPanel = {
       this.pinnedContainer.removeChild(this.pinnedContainer.firstChild)
     }
 
+    // Control visibility via class instead of CSS :has()
+    var pinnedSection = document.getElementById('pinned-section')
+    if (pinnedSection) {
+      pinnedSection.classList.toggle('empty', this.pinnedSites.length === 0)
+    }
+
     // Limit to max 6 pinned sites
     var sitesToRender = this.pinnedSites.slice(0, MAX_PINNED_SITES)
     var count = sitesToRender.length
@@ -824,6 +830,20 @@ var branchPanel = {
   },
 
   loadPinnedSites: function () {
+    // Clean start mode: clear pinned sites for fresh testing
+    // Check both globalArgs and process.argv for the flag
+    var isCleanStart = (typeof window !== 'undefined' && typeof window.globalArgs !== 'undefined' &&
+                        'clean-start' in window.globalArgs) ||
+                       (typeof process !== 'undefined' && process.argv &&
+                        process.argv.some(function(arg) { return arg === '--clean-start' }))
+
+    if (isCleanStart) {
+      localStorage.removeItem('branchPanel.pinned')
+      console.log('[BranchPanel] Clean start: cleared pinned sites')
+      this.pinnedSites = []
+      return
+    }
+
     try {
       var saved = localStorage.getItem('branchPanel.pinned')
       if (saved) {

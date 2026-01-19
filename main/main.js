@@ -34,6 +34,7 @@ if (process.argv.some(arg => arg === '-v' || arg === '--version')) {
 let isInstallerRunning = false
 const isDevelopmentMode = process.argv.some(arg => arg === '--development-mode')
 const isDebuggingEnabled = process.argv.some(arg => arg === '--debug-browser')
+const isCleanStart = process.argv.some(arg => arg === '--clean-start')
 
 function clamp (n, min, max) {
   return Math.max(Math.min(n, max), min)
@@ -221,6 +222,7 @@ function createWindowWithBounds (bounds, customArgs) {
         '--app-version=' + app.getVersion(),
         '--app-name=' + app.getName(),
         ...((isDevelopmentMode ? ['--development-mode'] : [])),
+        ...((isCleanStart ? ['--clean-start'] : [])),
         '--window-id=' + windows.nextId,
         ...((windows.getAll().length === 0 ? ['--initial-window'] : [])),
         ...(windows.hasEverCreatedWindow ? [] : ['--launch-window']),

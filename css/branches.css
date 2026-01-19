@@ -48,8 +48,8 @@ body.is-ntp #searchbar {
   padding: 0 12px 12px 12px;
 }
 
-#pinned-section:empty,
-#pinned-section:not(:has(.pinned-icon-item)) {
+/* Hide pinned section when empty (controlled via JS class) */
+#pinned-section.empty {
   display: none;
 }
 
@@ -230,36 +230,6 @@ body.is-ntp #searchbar {
   background: rgba(255, 255, 255, 0.12);
 }
 
-/* Tab group color indicators for root-level tabs */
-.branch-item[data-depth="0"] {
-  position: relative;
-}
-
-.branch-item[data-depth="0"]::before {
-  content: "";
-  position: absolute;
-  left: 4px;
-  top: 6px;
-  bottom: 6px;
-  width: 4px;
-  border-radius: 2px;
-  background: var(--group-color, rgba(138, 180, 248, 0.8));
-}
-
-/* 8 distinct group colors cycling */
-.branch-item[data-depth="0"]:nth-of-type(8n+1) { --group-color: rgba(138, 180, 248, 0.8); } /* Blue */
-.branch-item[data-depth="0"]:nth-of-type(8n+2) { --group-color: rgba(129, 201, 149, 0.8); } /* Green */
-.branch-item[data-depth="0"]:nth-of-type(8n+3) { --group-color: rgba(253, 214, 99, 0.8); }  /* Yellow */
-.branch-item[data-depth="0"]:nth-of-type(8n+4) { --group-color: rgba(242, 139, 130, 0.8); } /* Red */
-.branch-item[data-depth="0"]:nth-of-type(8n+5) { --group-color: rgba(215, 174, 251, 0.8); } /* Purple */
-.branch-item[data-depth="0"]:nth-of-type(8n+6) { --group-color: rgba(255, 183, 77, 0.8); }  /* Orange */
-.branch-item[data-depth="0"]:nth-of-type(8n+7) { --group-color: rgba(128, 222, 234, 0.8); } /* Cyan */
-.branch-item[data-depth="0"]:nth-of-type(8n+8) { --group-color: rgba(244, 143, 177, 0.8); } /* Pink */
-
-/* Adjust padding for root items to account for color indicator */
-.branch-item[data-depth="0"] {
-  padding-left: 16px;
-}
 
 /* =========================================
    CLOSE BUTTON - Chrome-style rounded
@@ -303,8 +273,6 @@ body.is-ntp #searchbar {
    INDENTATION - Chrome-style simplified
    ========================================= */
 
-/* Root items have extra padding for color indicator */
-.branch-item[data-depth="0"] { padding-left: 16px; }
 /* Child items use margin-based indentation */
 .branch-item[data-depth="1"] { margin-left: 12px; }
 .branch-item[data-depth="2"] { margin-left: 24px; }
@@ -546,7 +514,6 @@ body.is-ntp #searchbar {
 }
 
 /* Hide text content in minimal collapsed mode */
-#branch-sidebar.collapsed-minimal #pinned-section,
 #branch-sidebar.collapsed-minimal .branch-content,
 #branch-sidebar.collapsed-minimal .branch-toggle,
 #branch-sidebar.collapsed-minimal .branch-close-btn,
@@ -579,6 +546,30 @@ body.is-ntp #searchbar {
 /* Hide indent guides in collapsed mode */
 #branch-sidebar.collapsed-minimal .branch-item[data-depth]:not([data-depth="0"])::after {
   display: none;
+}
+
+/* Pinned sites in collapsed mode - show as vertical strip */
+#branch-sidebar.collapsed-minimal #pinned-section {
+  padding: 8px 4px;
+}
+
+#branch-sidebar.collapsed-minimal #pinned-sites {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+#branch-sidebar.collapsed-minimal .pinned-icon-item {
+  width: 36px;
+  height: 36px;
+  padding: 4px;
+}
+
+#branch-sidebar.collapsed-minimal .pinned-icon-item img,
+#branch-sidebar.collapsed-minimal .pinned-fallback {
+  width: 28px;
+  height: 28px;
 }
 
 /* Thinner scrollbar in collapsed mode */
