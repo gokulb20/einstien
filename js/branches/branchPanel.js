@@ -5,6 +5,7 @@
 var branchState = null
 var browserUI = require('browserUI.js')
 var webviews = require('webviews.js')
+var settings = require('util/settings/settings.js')
 
 // Safely get branchState module (lazy load with error handling)
 function getBranchState () {
@@ -83,7 +84,16 @@ var branchPanel = {
 
     // Load saved state
     this.loadCollapsedState()
+    this.migratePinnedSites()
     this.loadPinnedSites()
+
+    // Listen for pinned sites changes from other windows
+    settings.listen('branchPanel.pinnedSites', function (value) {
+      if (value) {
+        self.pinnedSites = value
+        self.renderPinnedSites()
+      }
+    })
 
     // Setup button handlers
     this.setupButtonHandlers()
@@ -859,24 +869,27 @@ var branchPanel = {
     this.renderPinnedSites()
   },
 
-  savePinnedSites: function () {
+  migratePinnedSites: function () {
+    // One-time migration from localStorage to settings
     try {
-      localStorage.setItem('branchPanel.pinned', JSON.stringify(this.pinnedSites))
+      var oldData = localStorage.getItem('branchPanel.pinned')
+      if (oldData && !settings.get('branchPanel.pinnedSites')) {
+        var migrated = JSON.parse(oldData)
+        settings.set('branchPanel.pinnedSites', migrated)
+        localStorage.removeItem('branchPanel.pinned')
+        console.log('[BranchPanel] Migrated', migrated.length, 'pinned sites to settings')
+      }
     } catch (e) {
-      console.warn('[BranchPanel] Failed to save pinned sites:', e)
+      console.warn('[BranchPanel] Failed to migrate pinned sites:', e)
     }
   },
 
+  savePinnedSites: function () {
+    settings.set('branchPanel.pinnedSites', this.pinnedSites)
+  },
+
   loadPinnedSites: function () {
-    try {
-      var saved = localStorage.getItem('branchPanel.pinned')
-      if (saved) {
-        this.pinnedSites = JSON.parse(saved)
-      }
-    } catch (e) {
-      console.warn('[BranchPanel] Failed to load pinned sites:', e)
-      this.pinnedSites = []
-    }
+    this.pinnedSites = settings.get('branchPanel.pinnedSites') || []
   },
 
   // =========================================
