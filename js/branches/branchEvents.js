@@ -198,8 +198,8 @@ async function ensureAllTabsHaveBranches () {
   var rootBranchId = bs.getRootBranchId()
   var isFirstTab = true
 
-  tasks.forEach(function (task) {
-    task.tabs.forEach(async function (tab) {
+  for (const task of tasks) {
+    for (const tab of task.tabs) {
       if (!tab.branchId) {
         // Tab exists but has no branch
         if (!root && isFirstTab) {
@@ -222,8 +222,8 @@ async function ensureAllTabsHaveBranches () {
           console.log('[BranchEvents] Migration: Created child branch', branchId, 'for tab', tab.id)
         }
       }
-    })
-  })
+    }
+  }
 }
 
 // Debug: Print branch tree to console
