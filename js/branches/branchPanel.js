@@ -1189,8 +1189,6 @@ var branchPanel = {
       // Get actual sidebar width
       sidebarWidth = sidebar.offsetWidth
     }
-    var availableWidth = window.innerWidth - sidebarWidth
-    var availableHeight = window.innerHeight
 
     // Adjust horizontally if would overflow
     if (rect.right > window.innerWidth) {
@@ -1200,7 +1198,7 @@ var branchPanel = {
     }
 
     // Adjust vertically if would overflow
-    if (rect.bottom > availableHeight) {
+    if (rect.bottom > window.innerHeight) {
       menu.style.top = Math.max(0, y - rect.height) + 'px'
     }
   },
@@ -1236,8 +1234,6 @@ var branchPanel = {
       // Get actual sidebar width
       sidebarWidth = sidebar.offsetWidth
     }
-    var availableWidth = window.innerWidth - sidebarWidth
-    var availableHeight = window.innerHeight
 
     // Adjust horizontally if would overflow
     if (rect.right > window.innerWidth) {
@@ -1247,7 +1243,7 @@ var branchPanel = {
     }
 
     // Adjust vertically if would overflow
-    if (rect.bottom > availableHeight) {
+    if (rect.bottom > window.innerHeight) {
       menu.style.top = Math.max(0, y - rect.height) + 'px'
     }
   },
@@ -1304,8 +1300,6 @@ var branchPanel = {
       // Get actual sidebar width
       sidebarWidth = sidebar.offsetWidth
     }
-    var availableWidth = window.innerWidth - sidebarWidth
-    var availableHeight = window.innerHeight
 
     // Adjust horizontally if would overflow
     if (rect.right > window.innerWidth) {
@@ -1315,7 +1309,7 @@ var branchPanel = {
     }
 
     // Adjust vertically if would overflow
-    if (rect.bottom > availableHeight) {
+    if (rect.bottom > window.innerHeight) {
       menu.style.top = Math.max(0, y - rect.height) + 'px'
     }
   },
