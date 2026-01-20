@@ -133,6 +133,15 @@ var branchPanel = {
       self.clearStaleBranches()
     }, 300000) // 5 minutes
 
+    // Dynamic breadcrumb sizing on window resize
+    var resizeTimeout
+    window.addEventListener('resize', function () {
+      clearTimeout(resizeTimeout)
+      resizeTimeout = setTimeout(function () {
+        self.updateBreadcrumbs()
+      }, 100)
+    })
+
     console.log('[BranchPanel] Initialized')
   },
 
@@ -573,6 +582,21 @@ var branchPanel = {
   // BREADCRUMB RENDERING - Shows navigation history within branch
   // =========================================
 
+  // Calculate how many breadcrumbs can fit based on container width
+  calculateMaxVisibleBreadcrumbs: function () {
+    if (!this.breadcrumbContainer) return 5
+    
+    var containerWidth = this.breadcrumbContainer.offsetWidth
+    if (containerWidth === 0) return 5
+    
+    var reservedSpace = 110
+    var availableWidth = containerWidth - reservedSpace
+    var avgBreadcrumbWidth = 80
+    
+    var calculated = Math.floor(availableWidth / avgBreadcrumbWidth)
+    return Math.max(3, Math.min(10, calculated))
+  },
+
   updateBreadcrumbs: function () {
     if (!this.breadcrumbContainer) return
 
@@ -613,8 +637,8 @@ var branchPanel = {
     }
 
     // Calculate display range - show items around current position
-    // Max 5 visible items for cleaner UI
-    var maxVisible = 5
+    // Dynamic max visible based on container width
+    var maxVisible = this.calculateMaxVisibleBreadcrumbs()
     var startIndex = 0
     var endIndex = history.length - 1
 
