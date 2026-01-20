@@ -126,7 +126,7 @@ async function addToHistory (branchId, url, title, options) {
 
   var branch = branches[branchId]
   var history = branch.history || []
-  var historyIndex = branch.historyIndex !== undefined ? branch.historyIndex : history.length - 1
+  var historyIndex = branch.historyIndex !== undefined ? branch.historyIndex : Math.max(0, history.length - 1)
 
   // Check if this is a breadcrumb navigation (position change, not new entry)
   if (options && options.isBreadcrumbNav) {
