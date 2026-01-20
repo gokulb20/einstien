@@ -56,6 +56,8 @@ var branchPanel = {
   pinnedSites: [],
   contextMenu: null,
   isNewTabMode: false, // Track if we're creating a new tab vs navigating current
+  _currentNavToken: null,
+  _navTokenCounter: 0,
 
   initialize: function () {
     this.container = document.getElementById('branch-sidebar')
@@ -690,22 +692,25 @@ var branchPanel = {
     var entry = await bs.navigateToHistoryIndex(branchId, index)
     if (!entry) return
 
-    // Mark this as a breadcrumb navigation so addToHistory doesn't add a new entry
-    this._isBreadcrumbNavigation = true
+    // Generate a unique token for this navigation
+    this._navTokenCounter++
+    var token = this._navTokenCounter
+    this._currentNavToken = token
 
     // Navigate to the URL
     webviews.update(tabId, url)
 
-    // Clear the flag after a short delay
-    var self = this
-    setTimeout(function () {
-      self._isBreadcrumbNavigation = false
-    }, 500)
+    // Token will be cleared by branchEvents.js after navigation completes
   },
 
   // Check if current navigation is from breadcrumb click
   isBreadcrumbNavigation: function () {
-    return this._isBreadcrumbNavigation === true
+    return this._currentNavToken !== null
+  },
+
+  // Clear breadcrumb navigation token
+  clearBreadcrumbNavigation: function () {
+    this._currentNavToken = null
   },
 
   getShortTitle: function (title) {

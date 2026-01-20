@@ -149,6 +149,11 @@ function setupEventListeners () {
       var bp = getBranchPanel()
       var isBreadcrumbNav = bp && bp.isBreadcrumbNavigation && bp.isBreadcrumbNavigation()
 
+      // Clear the token immediately after checking
+      if (isBreadcrumbNav && bp.clearBreadcrumbNavigation) {
+        bp.clearBreadcrumbNavigation()
+      }
+
       // Add to navigation history (shows Home > Google > Search in breadcrumb)
       // If breadcrumb navigation, this will be skipped (position already updated)
       await bs.addToHistory(branch.id, value, title, { isBreadcrumbNav: isBreadcrumbNav })
