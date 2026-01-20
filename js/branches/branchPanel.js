@@ -1010,7 +1010,15 @@ var branchPanel = {
       var faviconImg = document.createElement('img')
       faviconImg.src = faviconUrl
       faviconImg.onerror = function () {
-        favicon.innerHTML = '<span class="fallback-icon">' + self.getFirstLetter(displayTitle) + '</span>'
+        try {
+          var hostname = new URL(displayUrl).hostname
+          this.src = 'https://icons.duckduckgo.com/ip3/' + hostname + '.ico'
+          this.onerror = function () {
+            favicon.innerHTML = '<span class="fallback-icon">' + self.getFirstLetter(displayTitle) + '</span>'
+          }
+        } catch (e) {
+          favicon.innerHTML = '<span class="fallback-icon">' + self.getFirstLetter(displayTitle) + '</span>'
+        }
       }
       favicon.appendChild(faviconImg)
     } else {
@@ -1422,8 +1430,7 @@ var branchPanel = {
     if (!url || url === 'about:blank' || url.startsWith('min:')) return null
     try {
       var urlObj = new URL(url)
-      // Use Google's favicon service for reliable favicons
-      return 'https://www.google.com/s2/favicons?domain=' + urlObj.hostname + '&sz=32'
+      return urlObj.origin + '/favicon.ico'
     } catch (e) {
       return null
     }
