@@ -723,8 +723,20 @@ var branchPanel = {
     if (!title) return 'Page'
     // Remove common prefixes/suffixes and truncate
     title = title.replace(/^https?:\/\/(www\.)?/, '')
-    title = title.split(' - ')[0] // Take first part before dash
-    title = title.split(' | ')[0] // Take first part before pipe
+    
+    // Only remove last segment if it looks like a site suffix
+    const commonSuffixes = /^(YouTube|Google|Facebook|Twitter|Reddit|GitHub|Stack Overflow|Medium|Wikipedia|CNN|BBC|NYTimes|Amazon|Netflix)$/i
+    const domainPattern = /^[a-z0-9-]+\.(com|org|net|edu|gov|io|co)$/i
+    
+    let parts = title.split(/\s+[-|]\s+/)
+    if (parts.length > 1) {
+      const lastPart = parts[parts.length - 1]
+      // Only remove if it matches known patterns
+      if (commonSuffixes.test(lastPart) || domainPattern.test(lastPart) || (parts.length === 2 && lastPart.split(' ').length === 1)) {
+        title = parts.slice(0, -1).join(' - ')
+      }
+    }
+    
     if (title.length > 20) {
       title = title.substring(0, 18) + '...'
     }
